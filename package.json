@@ -1,7 +1,7 @@
 {
   "name": "radar-de-vagas-ui",
   "private": true,
-  "version": "0.18.0",
+  "version": "0.19.0",
   "scripts": {
     "build:css": "node web/build_tailwind.js"
   },

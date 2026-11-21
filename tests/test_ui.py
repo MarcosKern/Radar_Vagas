@@ -10,9 +10,9 @@ class UITests(unittest.TestCase):
   self.assertNotIn('cdn.tailwindcss.com',html);self.assertNotIn('cdn.jsdelivr.net',html)
  def test_v4_controls_present(self):
   html=(WEB/'index.html').read_text('utf8');js=(WEB/'assets'/'app.js').read_text('utf8')
-  for id_ in ('page-dashboard','page-vagas','page-candidaturas','page-relatorios','page-config','manualDialog','manageDialog','importDialog','manualForm','manualBtn','scanBtn','exportXlsxBtn','modeFilter','statusFilter','viewFilter','sourceFilter','resetFilters','menuBtn','scrim','xlsxFile','manageNotes','cfgQueryCombos','aiSearchBtn','sourceGroups','tagGroups'):
+  for id_ in ('page-dashboard','page-vagas','page-candidaturas','page-relatorios','page-config','manualDialog','manageDialog','importDialog','manualForm','manualBtn','scanBtn','exportXlsxBtn','modeFilter','statusFilter','viewFilter','sourceFilter','resetFilters','menuBtn','scrim','xlsxFile','manageNotes','cfgQueryCombos','aiSearchBtn','sourceGroups','tagGroups','linkedinSearchBtn','linkedinDialog','linkedinSearchList','linkedinJobUrl'):
    with self.subTest(id_=id_):self.assertIn('id="'+id_+'"',html)
-  for fn in ('openManage','openManual','submitManual','saveManage','importWorkbook','saveSettings','renderTagGroups'):
+  for fn in ('openManage','openManual','submitManual','saveManage','importWorkbook','saveSettings','renderTagGroups','linkedInSearchUrl','openLinkedInSearches','submitLinkedInUrl'):
    self.assertIn('function '+fn,js)
   self.assertNotIn('onclick=',html)
  def test_custom_css_accessibility_and_squares(self):

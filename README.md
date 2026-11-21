@@ -1,4 +1,4 @@
-# Radar de Vagas — V0.18
+# Radar de Vagas — V0.19
 > **Instalação inicial:** este projeto não inclui `config.json`, bancos SQLite, vagas, candidaturas,
 > perfis profissionais, credenciais ou arquivos de exemplo. Na primeira execução, o sistema
 > usa apenas valores técnicos mínimos em memória, com todas as fontes desativadas.
@@ -11,7 +11,7 @@
 
 Sistema local de monitoramento e organização de oportunidades de TI para Windows, com painel responsivo, importação/exportação de vagas, acompanhamento de candidaturas e geração de currículos personalizáveis por vaga.
 
-**Versão atual:** V0.18 (pré-lançamento). A numeração de desenvolvimento segue `V0.X` até a primeira versão estável. **Toda a documentação e todo o histórico de versões ficam neste único `README.md`**. Não são criados arquivos `CHANGELOG_*.md` separadamente.
+**Versão atual:** V0.19 (pré-lançamento). A numeração de desenvolvimento segue `V0.X` até a primeira versão estável. **Toda a documentação e todo o histórico de versões ficam neste único `README.md`**. Não são criados arquivos `CHANGELOG_*.md` separadamente.
 
 ## Instalação e uso rápido
 
@@ -97,7 +97,7 @@ python monitor.py scan
 python -m unittest discover -s tests -v
 ```
 
-Para gerar um executável Windows x64, instale Go 1.24+ no ambiente de build e rode `python desktop/build.py --manifest` e `python desktop/build.py --package Radar_de_Vagas_V0.18.zip`. O build verifica o SHA-256 do Python embarcado. Para publicar uma atualização da aplicação, incremente a versão, atualize este histórico, gere o manifesto e integre os arquivos juntos na `main`. Mudanças no próprio inicializador ou no Python embarcado exigem uma nova distribuição do executável.
+Para gerar um executável Windows x64, instale Go 1.24+ no ambiente de build e rode `python desktop/build.py --manifest` e `python desktop/build.py --package Radar_de_Vagas_V0.19.zip`. O build verifica o SHA-256 do Python embarcado. Para publicar uma atualização da aplicação, incremente a versão, atualize este histórico, gere o manifesto e integre os arquivos juntos na `main`. Mudanças no próprio inicializador ou no Python embarcado exigem uma nova distribuição do executável.
 
 O servidor web opera em `127.0.0.1`; a busca periódica pode ser agendada com `agendar_buscas.ps1`. Os registros de busca são armazenados localmente. A coleta depende de acesso de rede e da disponibilidade dos provedores.
 
@@ -304,3 +304,10 @@ A integração não altera o formato do XLSX nem os critérios de coleta. Preser
 
 - Substituídas as formas CSS anteriores por ícones SVG leves, com check, ponto, erro e spinner posicionados no centro exato do mesmo `viewBox`.
 - Refinados espessura, proporção e animação do spinner para evitar a aparência de botão de energia.
+
+### V0.19 — pesquisas no LinkedIn
+
+- Novo painel de pesquisas do LinkedIn geradas a partir dos cargos configurados, com filtros de período, Brasil e trabalho remoto.
+- Cada pesquisa abre diretamente no navegador; o Radar não solicita credenciais, não reutiliza sessão e não faz scraping do LinkedIn.
+- Campo para colar o link de uma vaga encontrada e continuar o cadastro manual com a URL já preenchida.
+- Links do LinkedIn cadastrados pelo usuário passam a ser identificados como fonte `LinkedIn`, mantendo edição, exclusão e deduplicação disponíveis.

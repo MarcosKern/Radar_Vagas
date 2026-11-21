@@ -44,6 +44,18 @@ class ManualTests(unittest.TestCase):
         self.assertGreater(j['score'],0)
         self.assertTrue(any('manual' in s.lower() for s in j['reasons']))
 
+    def test_linkedin_link_is_identified_and_remains_editable(self):
+        job_id = add_manual_job(fixture(url='https://www.linkedin.com/jobs/view/analista-1234567890/'),CFG)
+        job = db.rows()[0]
+        self.assertEqual(job['source'],'LinkedIn')
+        self.assertTrue(edit_manual_job(job_id,fixture(url='https://br.linkedin.com/jobs/view/1234567890/',notes='Atualizada'),CFG))
+        self.assertEqual(db.rows()[0]['notes'],'Atualizada')
+        self.assertTrue(delete_manual_job(job_id))
+
+    def test_similar_domain_is_not_treated_as_linkedin(self):
+        add_manual_job(fixture(url='https://linkedin.com.example.org/jobs/view/123'),CFG)
+        self.assertEqual(db.rows()[0]['source'],'Manual')
+
     def test_no_link_and_excluded_title_can_still_be_added(self):
         id=add_manual_job(fixture(title='Senior Project Manager',url='',mode='Não informado',location=''),CFG)
         self.assertEqual(db.rows()[0]['id'],id)
