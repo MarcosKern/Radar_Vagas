@@ -32,7 +32,13 @@ jobs:
           $shortcut = Join-Path $moved 'Radar de Vagas.lnk'
           $exe = Join-Path $moved 'Projeto/Radar de Vagas.exe'
           if (!(Test-Path $exe)) { throw 'Executável ausente' }
-          Start-Process -FilePath $shortcut -WorkingDirectory $env:RUNNER_TEMP
+          $shell = New-Object -ComObject WScript.Shell
+          $resolved = $shell.CreateShortcut($shortcut).TargetPath
+          Write-Host "Destino resolvido pelo Windows = $resolved"
+          if ($resolved -ne $exe.Replace('/', '\')) { throw "Destino incorreto ao mover a pasta." }
+          # Server Core runners may lack an Explorer file association for .lnk.
+          try { Start-Process -FilePath $shortcut -WorkingDirectory $env:RUNNER_TEMP -ErrorAction Stop }
+          catch [System.InvalidOperationException] { Start-Process -FilePath $resolved -WorkingDirectory $env:RUNNER_TEMP }
           try {
             $health = $null
             for ($i = 0; $i -lt 45; $i++) {
