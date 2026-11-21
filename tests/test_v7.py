@@ -121,12 +121,17 @@ class ExecutionEventTests(unittest.TestCase):
     def test_monitor_html_logs_and_event_listeners(self):
         html=(ROOT/'web/index.html').read_text('utf-8')
         js=(ROOT/'web/assets/app.js').read_text('utf-8')
+        css=(ROOT/'web/assets/custom.css').read_text('utf-8')
         for tag in ('executionMonitor','executionSteps','executionLogs','executionProgressFill','executionBadge','toastStack'):
             self.assertIn(f'id="{tag}"',html)
         for fn in ('renderExecution','refreshExecutions','showToast'):
             self.assertIn('function '+fn+'(',js)
         self.assertIn("api('executions')",js)
         self.assertIn('refreshFreeModels()',js)
+        self.assertIn('.step-mark::before{content:""',css)
+        self.assertIn('place-items:center;position:relative',css)
+        self.assertIn('animation:exec-spin .8s linear infinite',css)
+        self.assertIn('@keyframes exec-spin',css)
 
 
 if __name__=='__main__':unittest.main()
