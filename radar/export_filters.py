@@ -4,7 +4,7 @@ No browser-side filter is trusted: the server applies these options for every do
 """
 from __future__ import annotations
 from datetime import date
-from .db import rows, APPLICATION_STATUSES
+from .db import rows, APPLICATION_STATUSES, opportunity_groups
 from .exclusion import exclusion_details
 
 SCOPES = {'applications', 'all', 'active', 'saved', 'blocked'}
@@ -50,6 +50,8 @@ def select_jobs(options, jobs=None, cfg=None):
     options=parse_options(options)
     data = rows(limit=100000) if jobs is None else list(jobs)
     result=[]
+    groups = dict(zip((job['id'] for job in data), opportunity_groups(data))) if options['scope']=='active' else {}
+    seen = set()
     for j in data:
         status=j.get('status','Nova')
         blocked=bool(j.get('ignored'))
@@ -68,6 +70,11 @@ def select_jobs(options, jobs=None, cfg=None):
         d=str(j.get(options['date_field']) or '')[:10]
         if options['date_from'] and (not d or d<options['date_from']):continue
         if options['date_to'] and (not d or d>options['date_to']):continue
+        if groups:
+            group = groups[j['id']]
+            if group in seen:
+                continue
+            seen.add(group)
         result.append(j)
     result.sort(key=lambda j:(str(j.get('applied_at') or j.get('first_seen') or ''), str(j.get('id') or '')),reverse=True)
     return result

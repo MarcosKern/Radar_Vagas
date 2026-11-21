@@ -38,7 +38,7 @@ const EXCLUSION_PRESETS=[
 const DEFAULT_EXCLUSION_LEVELS=Object.fromEntries(EXCLUSION_PRESETS.map(([k])=>[k,!['intern','junior'].includes(k)]));
 const DEFAULT_EXCLUSION_TERMS=['Tech Lead','Head of','Coordinator'];
 function showConfigTab(tab){
- const available=['rules','exclusions','sources','terms','ai','resume','appearance','backup'];
+ const available=['rules','exclusions','sources','terms','ai','resume','appearance','backup','updates'];
  if(!available.includes(tab))tab='rules';
  activeConfigTab=tab;
  document.querySelectorAll('[data-config-tab]').forEach(btn=>{
@@ -169,16 +169,15 @@ function renderJobs(){
    if(q&&!([j.title,j.company,j.location,j.description,(j.skills||[]).join(' ')].join(' ').toLowerCase().includes(q)))return false;
    return true;
  });
+ const seen=new Set();
+ const unique=result.filter(job=>{
+   const group=job.opportunity_group||job.id;
+   if(seen.has(group))return false;
+   seen.add(group);
+   return true;
+ });
  const sort=$('sortFilter').value;
- result.sort(sort==='score'?(a,b)=>b.score-a.score:sort==='title'?(a,b)=>a.title.localeCompare(b.title,'pt-BR'):(a,b)=>String(b.published||b.first_seen).localeCompare(String(a.published||a.first_seen)));
- // Uma vaga pode chegar de vários conectores com identificadores distintos.
- // Deduplicação visual depois dos filtros preserva as opções selecionadas.
- const unique=[];const keys=new Set();
- for(const j of result){
-  const normalized=x=>String(x||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
-  const key=[normalized(j.company),normalized(j.title),normalized(j.location)].join('|');
-  if(keys.has(key))continue;keys.add(key);unique.push(j);
- }
+ unique.sort(sort==='score'?(a,b)=>b.score-a.score:sort==='title'?(a,b)=>a.title.localeCompare(b.title,'pt-BR'):(a,b)=>String(b.published||b.first_seen).localeCompare(String(a.published||a.first_seen)));
  $('jobsCount').textContent=`${unique.length} oportunidades`;
  updateOpportunityFilterCount();
  displayJobs(unique,'jobsList');
@@ -353,7 +352,7 @@ function openManage(id){
  $('manageTitle').textContent=j.title;$('manageSubtitle').textContent=j.company+' · '+j.source+' · '+(j.location||'local desconhecido');
  $('manageStatus').value=j.status;$('manageFollowup').value=(j.followup||'').slice(0,10);$('manageNotes').value=j.notes||'';$('manageContract').value=j.contract_type||'';$('manageRecruiter').value=j.recruiter||'';$('manageError').textContent='';
  $('manageReasons').textContent=(j.reasons||[]).join(' · ')||'Pontuação estimada a partir do perfil.';
- $('manageIgnore').textContent=j.ignored?'↻ Reativar vaga':'⊘ Bloquear vaga';const editable=['Manual','Importação XLSX'].includes(j.source);
+ $('manageIgnore').textContent=j.ignored?'↻ Reativar vaga':'⊘ Bloquear vaga';const editable=['Manual','Importação XLSX','Importação CSV'].includes(j.source);
  $('manageEdit').hidden=!editable;$('manageDelete').hidden=!editable;
  $('manageUrl').hidden=!j.url;$('manageUrl').href=j.url||'#';openDialog('manageDialog');
  loadManagedHistory(j.id);

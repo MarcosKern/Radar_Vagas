@@ -1,4 +1,4 @@
-# Radar de Vagas — V0.14
+# Radar de Vagas — V0.15
 > **Instalação inicial:** este projeto não inclui `config.json`, bancos SQLite, vagas, candidaturas,
 > perfis profissionais, credenciais ou arquivos de exemplo. Na primeira execução, o sistema
 > usa apenas valores técnicos mínimos em memória, com todas as fontes desativadas.
@@ -11,9 +11,13 @@
 
 Sistema local de monitoramento e organização de oportunidades de TI para Windows, com painel responsivo, importação/exportação de vagas, acompanhamento de candidaturas e geração de currículos personalizáveis por vaga.
 
-**Versão atual:** V0.14 (pré-lançamento). A numeração de desenvolvimento segue `V0.X` até a primeira versão estável. **Toda a documentação e todo o histórico de versões ficam neste único `README.md`**. Não são criados arquivos `CHANGELOG_*.md` separadamente.
+**Versão atual:** V0.15 (pré-lançamento). A numeração de desenvolvimento segue `V0.X` até a primeira versão estável. **Toda a documentação e todo o histórico de versões ficam neste único `README.md`**. Não são criados arquivos `CHANGELOG_*.md` separadamente.
 
 ## Instalação e uso rápido
+
+No Windows x64, abra **Radar_de_Vagas.exe**. Na primeira abertura ele extrai o aplicativo e o Python incluído em `%LOCALAPPDATA%\RadarDeVagas`, inicia o servidor em segundo plano e abre o painel no navegador. As próximas aberturas reutilizam a instalação. Para migrar da distribuição anterior, feche o servidor e copie seu `config.json` e a pasta `data` para esse diretório antes da primeira abertura.
+
+Para executar pelo código-fonte:
 
 1. Instale **Python 3.11 ou superior** no Windows e habilite a opção *Add Python to PATH*.
 2. Extraia o pacote completo para uma nova pasta (por exemplo, `Documentos\Radar_de_vagas`).
@@ -67,13 +71,13 @@ As fontes não garantem cobertura completa ou disponibilidade permanente. O hist
 
 ## Importação/exportação de vagas e configurações
 
-**Importar vagas** aceita XLSX (duas abas `Candidaturas` e `Detalhes das vagas`) e CSV (UTF-8 ou Windows-1252; `;` ou `,`). Apenas cargo e empresa são obrigatórios; colunas adicionais são opcionais. Registros com status **explicitamente Nova** são ignorados, para que a importação de uma lista de oportunidades não crie candidaturas indevidas. Sem coluna de status, o cadastro ainda pode ser importado como oportunidade Nova. Duplicatas são atualizadas sem apagar anotações, nem retroceder etapas avançadas.
+**Importar vagas** aceita XLSX (duas abas `Candidaturas` e `Detalhes das vagas`) e CSV (UTF-8 ou Windows-1252; `;` ou `,`). Apenas cargo e empresa são obrigatórios; colunas adicionais são opcionais. Vagas **Nova** com ID da vaga são restauradas. Registros com status **explicitamente Nova** sem ID são ignorados, para que a importação de uma lista de oportunidades não crie candidaturas indevidas. Sem coluna de status, o cadastro ainda pode ser importado como oportunidade Nova. Duplicatas são atualizadas sem apagar anotações, nem retroceder etapas avançadas.
 
 **Exportar vagas** abre filtros independentes da página: escopo (somente candidaturas por padrão, todas, ativas, salvas, bloqueadas), status, empresa, modalidade, pesquisa textual, período e tipo de data, incluir/ocultar bloqueadas. A quantidade é calculada pelo backend antes de baixar; **a mesma seleção** é exportada em **CSV ou XLSX**, incluindo candidaturas encerradas e de vagas bloqueadas se habilitado. O filtro padrão *Somente candidaturas* exclui vagas Nova ou apenas Salva. Para incluir todas as oportunidades, selecione *Todas as vagas* explicitamente.
 
 **Exportar configurações (JSON):** em **Configurações → Backup JSON**, baixe ou importe um arquivo com fontes, filtros, menus, aparência e layout/dados do currículo. O arquivo contém versão de esquema e é validado integralmente antes da importação; **não** inclui histórico/banco de vagas nem chave Gemini. O JSON pode conter dados pessoais preenchidos no currículo e deve ser mantido privado.
 
-**Baixar template:** o botão **Modelo XLSX** no topo do painel fornece a planilha em branco para novos cadastros. O arquivo `examples/Vagas_exemplo.csv` contém apenas dados fictícios para testar a importação e os filtros de exportação.
+**Baixar template:** o botão **Modelo XLSX** no topo do painel fornece a planilha em branco para novos cadastros.
 
 ## Atualização sem perda de dados
 
@@ -92,6 +96,8 @@ python monitor.py serve
 python monitor.py scan
 python -m unittest discover -s tests -v
 ```
+
+Para gerar um executável Windows x64, instale Go 1.24+ no ambiente de build e rode `python desktop/build.py --manifest` e `python desktop/build.py --exe Radar_de_Vagas.exe`. O build verifica o SHA-256 do Python embarcado. Para publicar uma atualização da aplicação, incremente a versão, atualize este histórico, gere o manifesto e integre os arquivos juntos na `main`. Mudanças no próprio inicializador ou no Python embarcado exigem uma nova distribuição do executável.
 
 O servidor web opera em `127.0.0.1`; a busca periódica pode ser agendada com `agendar_buscas.ps1`. Os registros de busca são armazenados localmente. A coleta depende de acesso de rede e da disponibilidade dos provedores.
 
@@ -276,4 +282,11 @@ A integração não altera o formato do XLSX nem os critérios de coleta. Preser
 - Reimportação preserva notas e evita rebaixar candidaturas que já avançaram para etapas posteriores.
 - Backup de configurações em JSON versionado para importar/exportar fontes, regras, menus, aparência e currículo sem copiar o banco ou a chave Gemini.
 - O filtro de oportunidades aplica as exclusões de senioridade às oportunidades já armazenadas (sem apagar candidaturas) e reduz anúncios duplicados entre conectores.
-- Nenhuma alteração publicada no GitHub; esta é uma entrega local de testes.
+
+
+### V0.15 — executável Windows e atualizações
+
+- Executável Windows x64 com Python incluído, servidor em segundo plano e abertura do painel no navegador.
+- Verificação do repositório na abertura, com opção de instalar ou adiar. A aba Atualizações permite consultar novamente e ler o histórico.
+- Atualizações de aplicação usam o manifesto publicado na main, baixam arquivos alterados, conferem SHA-256 e reiniciam o servidor. As versões ficam separadas dos dados. Se a candidata falhar na inicialização, o supervisor volta à anterior.
+- Restauração de oportunidades Nova exportadas com ID em CSV e XLSX. Filtros de oportunidades e exportação de vagas ativas tratam duplicatas entre fontes.

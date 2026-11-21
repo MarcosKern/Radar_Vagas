@@ -104,6 +104,7 @@
           <button type="button" role="tab" aria-selected="false" class="config-tab" data-config-tab="ai"><span class="config-tab-label">IA</span></button>
           <button type="button" role="tab" aria-selected="false" class="config-tab" data-config-tab="resume"><span class="config-tab-label">Currículo</span></button>
           <button type="button" role="tab" aria-selected="false" class="config-tab" data-config-tab="appearance"><span class="config-tab-label">Aparência</span></button>
+          <button type="button" role="tab" aria-selected="false" class="config-tab" data-config-tab="updates"><span class="config-tab-label">Atualizações</span></button>
           <button type="button" role="tab" aria-selected="false" class="config-tab" data-config-tab="backup"><span class="config-tab-label">Backup JSON</span></button>
         </nav>
       </aside>
@@ -204,6 +205,13 @@
       <div class="resume-settings-footer"><span>O arquivo gerado será um <b>.docx editável</b>, em coluna única e sem foto.</span><button class="btn btn-primary" id="resumeSaveSettings" type="button">Salvar modelo e perfil</button></div>
     </div>
     <div class="panel" data-config-panel="appearance" role="tabpanel" hidden><div class="settings-section-heading"><div class="settings-section-copy"><h3>Aparência e navegação</h3><p>Edite a identificação do aplicativo, os títulos e os itens do menu. Reordene ou oculte itens opcionais sem perder acesso a Bloqueados e Configurações.</p></div></div><label class="form-field" style="max-width:480px">Nome do aplicativo<input class="input" id="cfgBrand" maxlength="65"></label><div id="menuCustomizer" class="menu-customizer"></div></div>
+    <div class="panel" data-config-panel="updates" role="tabpanel" hidden>
+      <div class="settings-section-heading"><div class="settings-section-copy"><h3>Atualizações</h3><p>Consulte a versão instalada e as mudanças de cada entrega.</p></div></div>
+      <p id="updateStatus" role="status"></p>
+      <button type="button" id="checkUpdates" class="btn btn-outline-light">Verificar agora</button>
+      <button type="button" id="applyUpdate" class="btn btn-primary" hidden>Atualizar</button>
+      <h4>Histórico de versões</h4><div id="releaseHistory"></div>
+    </div>
     <div class="panel" data-config-panel="backup" role="tabpanel" hidden>
       <div class="settings-section-heading"><div class="settings-section-copy"><h3>Importar e exportar configurações</h3><p>Transfira fontes, filtros, opções de busca, menus e currículo para outra instalação.</p></div></div>
       <div class="backup-row"><div><strong>Exportar configurações</strong><p>Arquivo JSON com as preferências do Radar. Não inclui banco de vagas, histórico de candidaturas nem chave Gemini.</p></div><button type="button" class="btn btn-primary" id="exportSettingsJsonBtn">↓ Baixar JSON</button></div>
@@ -217,7 +225,7 @@
 
   <section class="page" id="page-relatorios"><div class="panel"><div class="panel-header"><div><h2>Histórico de execuções</h2><p>Coletas, deduplicação, erros e desempenho das fontes</p></div></div><div id="runList" class="runs"></div></div><div class="panel"><div class="panel-header"><div><h2>Histórico de buscas com IA</h2><p>Termos gerados pelo Gemini e anúncios verificados em fontes públicas</p></div></div><div id="aiRunList" class="runs"></div></div></section>
 
-  <footer class="footer">RADAR DE VAGAS · V0.14 · DADOS LOCAIS · SEM CANDIDATURA AUTOMÁTICA</footer>
+  <footer class="footer">RADAR DE VAGAS · V0.15 · DADOS LOCAIS · SEM CANDIDATURA AUTOMÁTICA</footer>
 </main></div>
 <div id="toastStack" class="toast-stack" role="status" aria-live="polite"></div>
 
@@ -249,7 +257,11 @@
   <div class="export-preview"><div><strong id="exportPreviewCount">Preparando prévia...</strong><p id="exportPreviewBreakdown" aria-live="polite">A prévia considera apenas os filtros desta janela.</p></div><button class="btn btn-subtle" type="button" id="exportResetBtn">Restaurar filtros</button></div>
   <div class="dialog-footer"><button type="button" class="btn btn-outline-light" data-close="exportDialog">Cancelar</button><button class="btn btn-outline-light" type="button" id="exportCsvBtn">↓ Exportar CSV</button><button class="btn btn-primary" type="button" id="exportXlsxBtn">↓ Exportar XLSX</button></div>
 </dialog>
-<dialog class="modal-box small-dialog" id="importDialog"><div class="modal-head"><div><h2>Importar vagas</h2><p>Formatos XLSX e CSV, com colunas opcionais.</p></div><button class="close-button" type="button" data-close="importDialog">✕</button></div><form id="importForm"><label class="form-field">Arquivo XLSX ou CSV<input type="file" id="xlsxFile" class="input" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" required></label><div class="hintbox">Apenas cargo e empresa são obrigatórios. Linhas com status explicitamente “Nova” são ignoradas. Registros existentes não perderão anotações e as candidaturas serão preservadas.</div><div id="importResult" class="import-result" role="status"></div><div class="dialog-footer"><button class="btn btn-outline-light" type="button" data-close="importDialog">Cancelar</button><button type="submit" id="importSubmit" class="btn btn-primary">Importar vagas</button></div></form></dialog>
+<dialog class="modal-box small-dialog" id="updateDialog" aria-labelledby="updateTitle">
+  <div class="modal-head"><div><h2 id="updateTitle">Atualização disponível</h2><p id="updateDescription" role="status"></p></div></div>
+  <div class="dialog-footer"><button type="button" id="deferUpdate" class="btn btn-outline-light">Deixar para mais tarde</button><button type="button" id="confirmUpdate" class="btn btn-primary">Atualizar</button></div>
+</dialog>
+<dialog class="modal-box small-dialog" id="importDialog"><div class="modal-head"><div><h2>Importar vagas</h2><p>Formatos XLSX e CSV, com colunas opcionais.</p></div><button class="close-button" type="button" data-close="importDialog">✕</button></div><form id="importForm"><label class="form-field">Arquivo XLSX ou CSV<input type="file" id="xlsxFile" class="input" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" required></label><div class="hintbox">Apenas cargo e empresa são obrigatórios. Vagas Nova exportadas pelo Radar são restauradas pelo ID da vaga. Em arquivos externos, linhas Nova sem ID são ignoradas. Registros existentes não perderão anotações e as candidaturas serão preservadas.</div><div id="importResult" class="import-result" role="status"></div><div class="dialog-footer"><button class="btn btn-outline-light" type="button" data-close="importDialog">Cancelar</button><button type="submit" id="importSubmit" class="btn btn-primary">Importar vagas</button></div></form></dialog>
 <dialog class="modal-box small-dialog" id="confirmActionDialog" aria-labelledby="confirmActionTitle"><div class="modal-head"><div><h2 id="confirmActionTitle">Confirmar ação</h2><p id="confirmActionText">Deseja continuar?</p></div><button class="close-button" type="button" data-close="confirmActionDialog">✕</button></div><div class="dialog-footer"><button class="btn btn-outline-light" type="button" data-close="confirmActionDialog">Cancelar</button><button class="btn btn-primary" type="button" id="confirmActionBtn">Confirmar</button></div></dialog>
 
 <dialog class="modal-box small-dialog" id="resumeDialog" aria-labelledby="resumeDialogTitle">
@@ -261,5 +273,5 @@
   </div>
   <div class="dialog-footer"><button type="button" class="btn btn-outline-light" id="resumeConfigureBtn">Personalizar modelo</button><a id="resumeDownloadBtn" class="btn btn-primary" href="#">↓ Baixar currículo .docx</a></div>
 </dialog>
-<script src="/assets/bootstrap.bundle.min.js"></script><script src="/assets/app.js" defer></script>
+<script src="/assets/bootstrap.bundle.min.js"></script><script src="/assets/app.js" defer></script><script src="/assets/updates.js" defer></script>
 </body></html>

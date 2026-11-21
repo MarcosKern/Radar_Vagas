@@ -10,7 +10,7 @@ import re
 import xml.etree.ElementTree as ET
 from .helpers import plain, list_str, iso_utc, safe_url, norm
 
-USER_AGENT = 'RadarDeVagas/0.14 (+personal-job-search; respect-rate-limits)'
+USER_AGENT = 'RadarDeVagas/0.15 (+personal-job-search; respect-rate-limits)'
 
 
 def fetch_json(base, params=None):

@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from email.utils import parsedate_to_datetime
 from datetime import date
+from .paths import DATA_HOME
 from pathlib import Path
 from .db import conn, save_jobs, save_ai_run
 from .scoring import evaluate
@@ -32,7 +33,7 @@ FREE_MODELS = {
 SUPPORTED_MODELS = tuple(FREE_MODELS)
 _MODEL_CACHE = {}
 _MODEL_CACHE_TTL = 600  # segundos: evita listagem repetitiva a cada refresh do painel
-KEY_FILE = Path(__file__).resolve().parents[1] / 'data' / 'gemini.key'
+KEY_FILE = DATA_HOME / 'data' / 'gemini.key'
 API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/'
 COOLDOWN_FILE = KEY_FILE.with_name('gemini_cooldown.json')
 
