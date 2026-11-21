@@ -4,9 +4,7 @@ import hashlib
 import json
 import os
 import shutil
-import struct
 import subprocess
-import uuid
 import tempfile
 import zipfile
 from pathlib import Path
@@ -24,14 +22,21 @@ def manifest():
     return {"version": VERSION, "files": {p.relative_to(ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(files) if p.is_file()}}
 
 
-def shortcut(target):
-    # MS-SHLLINK. Only RelativePath and IsUnicode are set. Explorer resolves
-    # the target relative to the .lnk even after the extracted folder moves.
-    clsid = uuid.UUID("00021401-0000-0000-C000-000000000046").bytes_le
-    header = struct.pack("<I16sIIQQQIiIHHII", 76, clsid, 0x88, 0x20,
-                         0, 0, 0, 0, 0, 1, 0, 0, 0, 0)
-    path = target.encode("utf-16le")
-    return header + struct.pack("<H", len(path)//2) + path + bytes(4)
+def shortcut(work, exe):
+    """Create a native Shell Link while its target exists at the packaged layout."""
+    link = work / "Radar de Vagas.lnk"
+    env = {**os.environ, "RADAR_LINK": str(link), "RADAR_TARGET": str(exe)}
+    script = """
+        $ErrorActionPreference = 'Stop'
+        $shell = New-Object -ComObject WScript.Shell
+        $link = $shell.CreateShortcut($env:RADAR_LINK)
+        $link.TargetPath = $env:RADAR_TARGET
+        $link.Description = 'Abrir Radar de Vagas'
+        $link.Save()
+    """
+    subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],
+                   env=env, check=True)
+    return link.read_bytes()
 
 
 def build(dest, runtime, package=False):
@@ -58,7 +63,8 @@ def build(dest, runtime, package=False):
                     out.write(ROOT / name, "app/" + name)
                 out.write(ROOT / "desktop/start.py", "desktop/start.py")
         shutil.copy(ROOT / "desktop/launcher_windows.go", work)
-        exe = work / "Radar de Vagas.exe" if package else dest
+        exe = work / "Projeto" / "Radar de Vagas.exe" if package else dest
+        exe.parent.mkdir(exist_ok=True, parents=True)
         flags = f"-s -w -H=windowsgui -X main.release={VERSION}"
         if package:
             flags += " -X main.layout=folder"
@@ -67,7 +73,7 @@ def build(dest, runtime, package=False):
                        env={**os.environ,"GOOS":"windows","GOARCH":"amd64","CGO_ENABLED":"0"}, check=True)
         if package:
             with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as out, zipfile.ZipFile(runtime) as source:
-                out.writestr("Radar de Vagas.lnk", shortcut(r".\Projeto\Radar de Vagas.exe"))
+                out.writestr("Radar de Vagas.lnk", shortcut(work, exe))
                 out.write(exe, "Projeto/" + exe.name)
                 for member in source.namelist():
                     out.writestr("Projeto/python/" + member, source.read(member))
