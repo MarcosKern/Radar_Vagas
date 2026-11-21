@@ -49,7 +49,7 @@ jobs:
             if ($state.jobs.Count -ne 0) { throw "Instalação com dados inesperados." }
           } finally {
             $app = Get-Process -Name 'Radar de Vagas' -ErrorAction SilentlyContinue | Where-Object Path -eq $exe
-            if ($app) { taskkill /PID $app.Id /T /F }
+            if ($app) {\n              taskkill /PID $app.Id /T /F 2>&1 | Out-Host\n              # taskkill may report protected browser descendants even after the Radar exits.\n              $global:LASTEXITCODE = 0\n            }
           }
       - uses: actions/upload-artifact@v4
         with:
