@@ -15,7 +15,7 @@ Sistema local de monitoramento e organização de oportunidades de TI para Windo
 
 ## Instalação e uso rápido
 
-No Windows x64, abra **Radar_de_Vagas.exe**. Na primeira abertura ele extrai o aplicativo e o Python incluído em `%LOCALAPPDATA%\RadarDeVagas`, inicia o servidor em segundo plano e abre o painel no navegador. As próximas aberturas reutilizam a instalação. Para migrar da distribuição anterior, feche o servidor e copie seu `config.json` e a pasta `data` para esse diretório antes da primeira abertura.
+No Windows x64, extraia o ZIP inteiro e abra o atalho **Radar de Vagas** (`.lnk`) na raiz da pasta extraída. Ele inicia `Projeto\Radar de Vagas.exe`, que usa o código e o Python incluídos em `Projeto`. O servidor roda em segundo plano e abre o painel no navegador. Mova a pasta extraída inteira para manter o destino do atalho acessível. As configurações, vagas e atualizações da instalação desktop ficam em `%LOCALAPPDATA%\RadarDeVagas`. Para migrar da distribuição anterior, feche o servidor e copie seu `config.json` e a pasta `data` para esse diretório antes da primeira abertura.
 
 Para executar pelo código-fonte:
 
@@ -97,7 +97,7 @@ python monitor.py scan
 python -m unittest discover -s tests -v
 ```
 
-Para gerar um executável Windows x64, instale Go 1.24+ no ambiente de build e rode `python desktop/build.py --manifest` e `python desktop/build.py --exe Radar_de_Vagas.exe`. O build verifica o SHA-256 do Python embarcado. Para publicar uma atualização da aplicação, incremente a versão, atualize este histórico, gere o manifesto e integre os arquivos juntos na `main`. Mudanças no próprio inicializador ou no Python embarcado exigem uma nova distribuição do executável.
+Para gerar um executável Windows x64, instale Go 1.24+ no ambiente de build e rode `python desktop/build.py --manifest` e `python desktop/build.py --package Radar_de_Vagas_V0.15.zip`. O build verifica o SHA-256 do Python embarcado. Para publicar uma atualização da aplicação, incremente a versão, atualize este histórico, gere o manifesto e integre os arquivos juntos na `main`. Mudanças no próprio inicializador ou no Python embarcado exigem uma nova distribuição do executável.
 
 O servidor web opera em `127.0.0.1`; a busca periódica pode ser agendada com `agendar_buscas.ps1`. Os registros de busca são armazenados localmente. A coleta depende de acesso de rede e da disponibilidade dos provedores.
 

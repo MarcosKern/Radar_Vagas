@@ -16,6 +16,7 @@ import (
 
 //go:embed bundle.zip
 var bundle []byte
+var layout string
 var release string // injected at build time
 
 func install(home string) (string, error) {
@@ -78,16 +79,30 @@ func run() error {
 		return err
 	}
 	home := filepath.Join(dir, "RadarDeVagas")
-	root, err := install(home)
-	if err != nil {
+	if err = os.MkdirAll(home, 0700); err != nil {
 		return err
+	}
+	var root, app string
+	if layout == "folder" {
+		self, err := os.Executable()
+		if err != nil {
+			return err
+		}
+		root = filepath.Dir(self)
+		app = root
+	} else {
+		root, err = install(home)
+		if err != nil {
+			return err
+		}
+		app = filepath.Join(root, "app")
 	}
 	log, err := os.OpenFile(filepath.Join(home, "desktop.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return err
 	}
 	defer log.Close()
-	cmd := exec.Command(filepath.Join(root, "python", "pythonw.exe"), filepath.Join(root, "desktop", "start.py"), filepath.Join(root, "app"), home)
+	cmd := exec.Command(filepath.Join(root, "python", "pythonw.exe"), filepath.Join(root, "desktop", "start.py"), app, home)
 	cmd.Dir = home
 	cmd.Stdout = log
 	cmd.Stderr = log
