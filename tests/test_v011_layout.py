@@ -52,7 +52,7 @@ class LayoutCustomizationTests(unittest.TestCase):
         self.assertIn('resumeLayoutEditor',html)
         self.assertIn('resumePagePreview',html)
         self.assertIn('resumeSectionOrder',html)
-        self.assertIn('V0.15',html)
+        self.assertIn('V0.16',html)
         self.assertIn('box-shadow:none!important',css)
 
 if __name__=='__main__':unittest.main()
