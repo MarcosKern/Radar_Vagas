@@ -1,8 +1,8 @@
 {
-  "version": "V0.15",
+  "version": "V0.16",
   "files": {
-    "README.md": "17a4df1dbf39fbceee4cd8c73f01daaf47165f6060d6b67b72de18f5ada5768b",
-    "monitor.py": "a07819c2b7665ab755549c636da9b0ef75ade03a2ba65a18af0c5df8132e7f34",
+    "README.md": "755a3226b26fa1d2eb73d0404bf6d2d5a8fb200445706c6d5de3932fff862608",
+    "monitor.py": "e7a088c64353e19bf9eeb26b44644f34570ab62a97f8d1b3abba34372ecd9ac1",
     "radar/__init__.py": "ea6353c993d07b97b38344dd41f079c3e2ebee5e9fbeb2aa1e1cfb3a06f6623c",
     "radar/ai_search.py": "722206c0e0b881dc1ff016a89eaa42bf5eb087bd3143a84fac2f4d466d87d8e9",
     "radar/csvio.py": "6d17a7823d81eb6e5017bf6a2a06d66ccc628ac50c7fc24f3106850f2db2d886",
@@ -23,7 +23,7 @@
     "web/assets/app.js": "779f3aedd7f0d8f851e1f9e6e742c5ebbc9bf5aabd6cf5990fa782d160663167",
     "web/assets/bootstrap.bundle.min.js": "cb789b7cec81aa580177e1b3c0561011539974d243d3a1de0d78a1a278015cab",
     "web/assets/bootstrap.min.css": "a31a97d0b41c95bbebb09b7c2329a4c672129f8369d96cb6ad8f638e84250c48",
-    "web/assets/custom.css": "79672a938fc514490d420d9276d63a87c29df27b747373730212e6fbb3f0097a",
+    "web/assets/custom.css": "c69401e67c1219a219c51c9b06198fd794d0905df9e8c88edfb958c7a3825cd9",
     "web/assets/favicon.svg": "666de6d1be09e0a01e687f5fb02fbd98b117b2ceddd4dfe4aa87438ad996244a",
     "web/assets/tailwind.css": "fc72c25e57b68f591b6d10f84f304ebae859786d5ca77f89870a8e64dffaef86",
     "web/assets/updates.js": "dc6500ad08567c362d6e1a747241acfaca2624af652ca8247b82bd56abd6844c",
