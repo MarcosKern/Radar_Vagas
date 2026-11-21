@@ -25,6 +25,12 @@ class DuplicateJobError(ValueError):
         self.existing_id = existing_id
 
 
+def _manual_source(url):
+    """Identifica somente a origem informada; não acessa nem consulta o link."""
+    host = (urlsplit(url).hostname or '').casefold().rstrip('.') if url else ''
+    return 'LinkedIn' if host == 'linkedin.com' or host.endswith('.linkedin.com') else 'Manual'
+
+
 def _clean_date(value, field):
     value = str(value or '').strip()
     if not value:
@@ -133,7 +139,7 @@ def add_manual_job(data, cfg, origin="Cadastro manual"):
              description,salary,eligible,score,reasons,skills,first_seen,last_seen,status,notes,
              followup,saved,applied_at,contract_type,recruiter)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
-            (job_id, 'Manual', job_id, fingerprint, j['title'],j['company'],j['location'],j['mode'],
+            (job_id, _manual_source(j['url']), job_id, fingerprint, j['title'],j['company'],j['location'],j['mode'],
              j['level'],j['published'],j['url'],j['description'],j['salary'],j['eligible'],
              score,json.dumps(reasons,ensure_ascii=False),json.dumps(skills,ensure_ascii=False),
              now,now,j['status'],j['notes'],j['followup'],j['saved'],now if j['status']=='Candidatada' else '',j['contract_type'],j['recruiter']))
@@ -147,14 +153,14 @@ def edit_manual_job(job_id, data, cfg):
     now = datetime.now(timezone.utc).isoformat()
     with conn() as c:
         existing = c.execute('SELECT source,applied_at,status FROM jobs WHERE id=?',(job_id,)).fetchone()
-        if not existing or existing['source'] not in ('Manual','Importação XLSX','Importação CSV'): return False
+        if not existing or existing['source'] not in ('Manual','LinkedIn','Importação XLSX','Importação CSV'): return False
         other = _duplicate(c,j,exclude_id=job_id)
         if other: raise DuplicateJobError(other)
         c.execute('''UPDATE jobs SET fingerprint=?,title=?,company=?,location=?,mode=?,level=?,
              published=?,url=?,description=?,salary=?,eligible=?,score=?,reasons=?,skills=?,
              last_seen=?,status=?,notes=?,followup=?,saved=?,contract_type=?,recruiter=?,
              applied_at=CASE WHEN ?='Candidatada' AND applied_at='' THEN ? ELSE applied_at END
-             WHERE id=? AND source IN ('Manual','Importação XLSX','Importação CSV') ''',
+             WHERE id=? AND source IN ('Manual','LinkedIn','Importação XLSX','Importação CSV') ''',
              (job_identity(j),j['title'],j['company'],j['location'],j['mode'],j['level'],
               j['published'],j['url'],j['description'],j['salary'],j['eligible'],score,
               json.dumps(reasons,ensure_ascii=False),json.dumps(skills,ensure_ascii=False),
@@ -166,7 +172,7 @@ def edit_manual_job(job_id, data, cfg):
 
 def delete_manual_job(job_id):
     with conn() as c:
-        deleted=c.execute("DELETE FROM jobs WHERE id=? AND source IN ('Manual','Importação XLSX','Importação CSV')",(job_id,)).rowcount == 1
+        deleted=c.execute("DELETE FROM jobs WHERE id=? AND source IN ('Manual','LinkedIn','Importação XLSX','Importação CSV')",(job_id,)).rowcount == 1
         if deleted:
             c.execute('DELETE FROM job_status_history WHERE job_id=?',(job_id,))
             refresh_exclusion_for_manual(c,job_id)
