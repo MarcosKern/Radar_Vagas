@@ -27,7 +27,7 @@ class SettingsHeadingTests(unittest.TestCase):
             self.assertNotIn('config-section-kicker',str(header))
         self.assertEqual(len(html.select('[data-config-panel]')),9)
         self.assertEqual(len(html.select('.config-tab-index')),0)
-        self.assertIn('V0.17',html.select_one('.footer').get_text())
+        self.assertIn('V0.18',html.select_one('.footer').get_text())
 
     def test_style_and_legacy_actions_remain(self):
         root=Path(__file__).resolve().parents[1]

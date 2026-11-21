@@ -234,6 +234,13 @@ function showToast(message,level='info'){
  while(container.children.length>4)container.lastElementChild.remove();
 }
 function showExecution(id){selectedExecutionId=id;renderExecution()}
+function executionStepIcon(status){
+ const svg='viewBox="0 0 16 16" aria-hidden="true" focusable="false"';
+ if(status==='success')return `<svg ${svg}><path d="M4.4 8.2 7.1 10.8 11.7 5.6"/></svg>`;
+ if(status==='running')return `<svg ${svg} class="step-spinner"><circle cx="8" cy="8" r="4.6"/></svg>`;
+ if(status==='error')return `<svg ${svg}><path d="M5.3 5.3 10.7 10.7M10.7 5.3 5.3 10.7"/></svg>`;
+ return `<svg ${svg}><circle class="step-pending-dot" cx="8" cy="8" r="1.45"/></svg>`;
+}
 function renderExecution(){
  const wrapper=$('executionMonitor');if(!wrapper)return;
  const rows=executionList||[];
@@ -253,7 +260,7 @@ function renderExecution(){
  $('executionStepText').textContent=item.status==='running'?`Etapa ${Math.max(1,current+1)} de ${item.steps.length}`:`${last} de ${item.steps.length} etapas concluídas`;
  $('executionProgressFill').style.width=progress+'%';$('executionProgress').setAttribute('aria-valuenow',String(progress));
  $('executionChoices').innerHTML=rows.slice(0,6).map(x=>`<button class="execution-choice ${x.id===item.id?'active':''}" type="button" data-execution-id="${escapeHTML(x.id)}">${x.type==='ai'?'✦ IA':'⌕ Busca'} · ${executionTime(x.started_at)} <span class="execution-dot ${executionTone(x.status)}"></span></button>`).join('');
- $('executionSteps').innerHTML=(item.steps||[]).map(x=>`<div class="execution-step ${escapeHTML(x.status)}"><span class="step-mark">${x.status==='success'?'✓':x.status==='error'?'×':x.status==='running'?'◌':'●'}</span>${escapeHTML(x.label)}</div>`).join('');
+ $('executionSteps').innerHTML=(item.steps||[]).map(x=>`<div class="execution-step ${escapeHTML(x.status)}"><span class="step-mark">${executionStepIcon(x.status)}</span>${escapeHTML(x.label)}</div>`).join('');
  $('executionLogs').innerHTML=(item.logs||[]).slice().reverse().map(x=>`<div class="execution-log ${escapeHTML(x.level)}"><span class="log-time">${escapeHTML(executionTime(x.at).split(' ').pop())}</span><span class="log-severity">${x.level==='success'?'✓':x.level==='warning'?'!':x.level==='error'?'×':'·'}</span><span>${escapeHTML(x.message)}</span></div>`).join('')||'<div class="execution-placeholder">Aguardando o primeiro evento registrado.</div>';
  $('executionLogCount').textContent=`${item.logs?.length||0} evento(s)`;
  const m=item.metrics||{};
