@@ -15,6 +15,7 @@ class SettingsHeadingTests(unittest.TestCase):
             'resume':'Modelo de currículo por vaga',
             'appearance':'Aparência e navegação',
             'backup':'Importar e exportar configurações',
+            'updates':'Atualizações',
         }
         for panel in html.select('[data-config-panel]'):
             name=panel['data-config-panel']
@@ -24,9 +25,9 @@ class SettingsHeadingTests(unittest.TestCase):
             self.assertEqual(header.select_one('h3').get_text(strip=True),expected[name])
             self.assertTrue(header.select_one('.settings-section-copy p').get_text(strip=True),name)
             self.assertNotIn('config-section-kicker',str(header))
-        self.assertEqual(len(html.select('[data-config-panel]')),8)
+        self.assertEqual(len(html.select('[data-config-panel]')),9)
         self.assertEqual(len(html.select('.config-tab-index')),0)
-        self.assertIn('V0.14',html.select_one('.footer').get_text())
+        self.assertIn('V0.15',html.select_one('.footer').get_text())
 
     def test_style_and_legacy_actions_remain(self):
         root=Path(__file__).resolve().parents[1]

@@ -9,9 +9,10 @@ import re
 import threading
 import uuid
 from datetime import datetime, timezone
+from .paths import DATA_HOME
 from pathlib import Path
 
-PATH = Path(__file__).resolve().parents[1] / 'data' / 'executions.json'
+PATH = DATA_HOME / 'data' / 'executions.json'
 STEPS = {
     'scan': ['Validando configurações', 'Consultando fontes públicas', 'Classificando aderência',
              'Salvando e removendo duplicatas', 'Registrando histórico e alertas', 'Finalizando busca'],

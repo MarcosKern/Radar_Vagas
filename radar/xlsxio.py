@@ -205,7 +205,7 @@ def import_items(items, warnings, cfg, origin='Importação XLSX'):
     inserted=updated=skipped=0
     skipped_nova=0
     for item in items:
-        if item.get('explicit_nova'):
+        if item.get('explicit_nova') and not item.get('id_original'):
             skipped+=1;skipped_nova+=1
             continue
         try:

@@ -18,7 +18,7 @@ from urllib.parse import urlparse, parse_qs
 
 ROOT=Path(__file__).resolve().parent
 sys.path.insert(0,str(ROOT))
-from radar.db import rows,runs,ai_runs,save_jobs,save_run,update_job,set_job_ignored,conn,DB_PATH,job_history
+from radar.db import rows,runs,ai_runs,save_jobs,save_run,update_job,set_job_ignored,conn,DB_PATH,job_history,opportunity_groups
 from radar.scoring import evaluate
 from radar.exclusion import exclusion_details, DEFAULT_EXCLUDED, LEVEL_PRESETS, DEFAULT_TERMS
 from radar.sources import collect
@@ -31,7 +31,13 @@ from radar.ai_search import run as run_ai, _requests_today, key_status, save_key
 from radar.executions import ExecutionStore
 from radar.resume import (DEFAULT_PROFILE,DEFAULT_TEMPLATE,normalize_profile,normalize_template,generate_docx)
 
-CONFIG=ROOT/'config.json'
+from radar.paths import DATA_HOME
+from radar.updates import APPLY_LOCK, Updates
+import secrets
+
+UPDATES = Updates()
+UPDATE_TOKEN = secrets.token_urlsafe(32)
+CONFIG=DATA_HOME/'config.json'
 WEB=ROOT/'web'/'index.html'
 SCAN_LOCK=threading.Lock()
 STATE={'running':False,'last_result':None,'ai_running':False,'ai_last_result':None}
@@ -39,7 +45,7 @@ EXECUTIONS=ExecutionStore()
 START_LOCK=threading.Lock()
 SETTINGS_FORMAT='radar-de-vagas-settings'
 SETTINGS_SCHEMA_VERSION=1
-SETTINGS_APP_VERSION='V0.14'
+SETTINGS_APP_VERSION='V0.15'
 SETTINGS_EDITABLE={'max_age_days','min_score','notify_score','include_remote','include_local','strict_brazil_eligibility','blocked_companies','sources','local_cities','gupy_queries','remote_queries','greenhouse_boards','lever_boards','ashby_boards','smartrecruiters_boards','workable_boards','recruitee_boards','max_queries_per_source','query_combinations','ai_model','ai_daily_cap','ai_max_output_tokens','ai_web_search','ui_brand','ui_menu','ui_titles','exclude_seniority','exclude_custom_terms','resume_profile','resume_template','profile_name','profile_role','profile_skills','role_terms','junior_terms','local_state','scan_limit_per_source','notes','ai_enabled'}
 
 
@@ -274,9 +280,9 @@ def ai_worker(run_id):
         STATE['ai_running']=False
 
 class Handler(BaseHTTPRequestHandler):
-    server_version='RadarVagas/V0.14'
+    server_version='RadarVagas/V0.15'
     def log_message(self, fmt,*args):
-        if not self.path.startswith(('/api/state','/api/executions')):super().log_message(fmt,*args)
+        if sys.stderr is not None and not self.path.startswith(('/api/state','/api/executions')):super().log_message(fmt,*args)
     def respond(self,data,status=200):
         b=json.dumps(data,ensure_ascii=False,default=str).encode()
         self.send_response(status);self.send_header('Content-Type','application/json; charset=utf-8');self.send_header('Cache-Control','no-store');self.send_header('X-Content-Type-Options','nosniff');self.send_header('Content-Length',str(len(b)));self.end_headers();self.wfile.write(b)
@@ -291,6 +297,7 @@ class Handler(BaseHTTPRequestHandler):
                 '/assets/bootstrap.bundle.min.js':'text/javascript; charset=utf-8',
                 '/assets/tailwind.css':'text/css; charset=utf-8',
                 '/assets/custom.css':'text/css; charset=utf-8',
+                '/assets/updates.js':'text/javascript; charset=utf-8',
                 '/assets/app.js':'text/javascript; charset=utf-8',
                 '/assets/favicon.svg':'image/svg+xml',
             }
@@ -341,6 +348,13 @@ class Handler(BaseHTTPRequestHandler):
             from radar.resume import tailored_data
             cfg=config();v=tailored_data(job,cfg['resume_profile'],cfg['resume_template'],language)
             self.respond({'ok':True,'matched':v['matched'],'has_description':v['has_description']});return
+        elif path == '/api/updates/health':
+            self.respond({'app':'Radar_Vagas', 'instance':os.getenv('RADAR_INSTANCE',''), 'version':SETTINGS_APP_VERSION})
+        elif path == '/api/updates':
+            if self.headers.get('Host','').split(':')[0] not in ('localhost','127.0.0.1'):
+                self.respond({'error':'Host inválido'},403)
+                return
+            self.respond({**UPDATES.status(), 'token':UPDATE_TOKEN})
         elif path=='/api/ai/models':
             try:self.respond(available_free_models())
             except Exception as e:self.respond({'error':str(e)[:250]},503)
@@ -355,7 +369,8 @@ class Handler(BaseHTTPRequestHandler):
         elif path=='/api/executions':self.respond({'executions':EXECUTIONS.snapshot(12)})
         elif path=='/api/state':
             cfg=config();jobs=rows(limit=10000)
-            for item in jobs:
+            for item,group in zip(jobs,opportunity_groups(jobs)):
+                item['opportunity_group']=group
                 details=exclusion_details(item,cfg)
                 item['auto_excluded']=bool(details) and item.get('status') in ('Nova','Salva')
             self.respond({'jobs':jobs,'runs':runs(),'ai_runs':ai_runs(),'settings':cfg,'scan':STATE,'ai':{'cloud':key_status(),'usage':_requests_today()}})
@@ -389,7 +404,7 @@ class Handler(BaseHTTPRequestHandler):
         elif path=='/api/settings/export.json':
             b=(json.dumps(portable_settings(),ensure_ascii=False,indent=2)+'\n').encode('utf-8')
             self.send_response(200);self.send_header('Content-Type','application/json; charset=utf-8')
-            self.send_header('Content-Disposition','attachment; filename="Radar_configuracoes_V0.14.json"')
+            self.send_header('Content-Disposition','attachment; filename="Radar_configuracoes_V0.15.json"')
             self.send_header('Cache-Control','no-store')
             self.send_header('Content-Length',str(len(b)));self.end_headers();self.wfile.write(b)
         else:self.respond({'error':'Não encontrado'},404)
@@ -410,6 +425,32 @@ class Handler(BaseHTTPRequestHandler):
         try:
             size=int(self.headers.get('Content-Length','0'))
             path=urlparse(self.path).path
+            if path.startswith('/api/updates/'):
+                if (self.headers.get('Host','').split(':')[0] not in ('localhost','127.0.0.1') or
+                    not secrets.compare_digest(self.headers.get('X-Radar-Token',''), UPDATE_TOKEN)):
+                    self.respond({'error':'Sessão de atualização inválida.'},403)
+                    return
+                if path == '/api/updates/check':
+                    self.respond(UPDATES.check())
+                    return
+                if path == '/api/updates/apply':
+                    if not APPLY_LOCK.acquire(blocking=False):
+                        self.respond({'error':'Atualização em andamento.'},409)
+                        return
+                    try:
+                        if STATE['running'] or STATE['ai_running']:
+                            self.respond({'error':'Aguarde a conclusão da busca.'},409)
+                            return
+                        UPDATES.stage()
+                        self.server.restart_requested = True
+                        try:
+                            self.respond({'ok':True})
+                        finally:
+                            threading.Thread(target=self.server.shutdown, daemon=True).start()
+                    finally:
+                        if not getattr(self.server,'restart_requested',False):
+                            APPLY_LOCK.release()
+                    return
             if path=='/api/import.xlsx':
                 if size<1 or size>12_000_000:self.respond({'error':'O arquivo XLSX deve ter no máximo 12 MB'},413);return
                 imported=import_xlsx(self.rfile.read(size),config())
@@ -500,14 +541,19 @@ def main():
         result=scan()
         print(json.dumps(result,indent=2,ensure_ascii=False));sys.exit(0 if result.get('ok') and not result.get('errors') else 1)
     elif args.command=='export':
-        path=ROOT/'data'/'Vagas_exportadas.csv';path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(export_csv(select_jobs({})));print(f'CSV de candidaturas salvo em {path}')
+        path=DATA_HOME/'data'/'Vagas_exportadas.csv';path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(export_csv(select_jobs({})));print(f'CSV de candidaturas salvo em {path}')
     else:
         port=getattr(args,'port',8765)
+        if not os.getenv('RADAR_SUPERVISED'):
+            from desktop.start import supervise
+            sys.exit(supervise(ROOT, DATA_HOME, port))
         server=ThreadingHTTPServer(('127.0.0.1',port),Handler)
+        server.daemon_threads=False
         conn().close()
         print(f'RadarVagas disponível em http://127.0.0.1:{port}/ (Ctrl+C para sair)',flush=True)
         try: server.serve_forever()
         except KeyboardInterrupt:print('\nDesligado.')
         finally:server.server_close()
+        if getattr(server,"restart_requested",False):sys.exit(75)
 
 if __name__=='__main__':main()

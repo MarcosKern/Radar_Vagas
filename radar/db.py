@@ -4,11 +4,12 @@ import sqlite3
 import hashlib
 import re
 from datetime import datetime, timezone
+from .paths import DATA_HOME
 from pathlib import Path
 from .helpers import norm, canonical_job_url
 
 ROOT=Path(__file__).resolve().parents[1]
-DB_PATH=ROOT/'data'/'jobs.sqlite'
+DB_PATH=DATA_HOME/'data'/'jobs.sqlite'
 SCHEMA='''
 CREATE TABLE IF NOT EXISTS jobs (
  id TEXT PRIMARY KEY, source TEXT NOT NULL, external_id TEXT, fingerprint TEXT,
@@ -99,6 +100,26 @@ def job_identity(job):
     return hashlib.sha1((a+'|'+b+'|'+location).encode()).hexdigest()[:20]
 
 
+def opportunity_groups(jobs):
+    """Connect duplicate postings by fingerprint or canonical URL before UI filtering."""
+    parents = {}
+    def root(key):
+        parents.setdefault(key, key)
+        while parents[key] != key:
+            parents[key] = parents[parents[key]]
+            key = parents[key]
+        return key
+
+    fingerprints = []
+    for job in jobs:
+        fingerprint = job_identity(job)
+        fingerprints.append(fingerprint)
+        url = canonical_job_url(job.get('url'))
+        if url:
+            parents[root(url)] = root(fingerprint)
+    return [root(fingerprint) for fingerprint in fingerprints]
+
+
 def exclusion_keys(job):
     """Independent identifiers; no broad company-wide blocking."""
     job=dict(job)
@@ -176,7 +197,7 @@ def save_jobs(items,stats=None):
             existing=by_fp.get(j_id) or (by_url.get(canon) if canon else None)
             if existing is not None:
                 already_known+=1
-                if existing['source'] in ('Manual','Importação XLSX'):continue
+                if existing['source'] in ('Manual','Importação XLSX','Importação CSV'):continue
                 actual_id=existing['id']
             else:
                 actual_id=j_id

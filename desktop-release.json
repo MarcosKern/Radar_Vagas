@@ -1,0 +1,32 @@
+{
+  "version": "V0.15",
+  "files": {
+    "README.md": "c96717eaa7210186e225ceff66c0f168ace37aba2e2d8ba56ea29ead75cebd05",
+    "monitor.py": "a07819c2b7665ab755549c636da9b0ef75ade03a2ba65a18af0c5df8132e7f34",
+    "radar/__init__.py": "ea6353c993d07b97b38344dd41f079c3e2ebee5e9fbeb2aa1e1cfb3a06f6623c",
+    "radar/ai_search.py": "722206c0e0b881dc1ff016a89eaa42bf5eb087bd3143a84fac2f4d466d87d8e9",
+    "radar/csvio.py": "6d17a7823d81eb6e5017bf6a2a06d66ccc628ac50c7fc24f3106850f2db2d886",
+    "radar/db.py": "37f2f8d58f8689b9882c79ae60ed931375b85966ebaff68bdf0295bbeb79c51c",
+    "radar/exclusion.py": "c42d876abee144d059153837a7dace135bafec92891cbfa699d8d0afc72a1f44",
+    "radar/executions.py": "2a6564b27228961013bb80d9453b1ffd023edacd2b2609caf87a5c5beb3a4ab8",
+    "radar/export_filters.py": "577d6671b7d99cbe89e7e2d430e2307b52ed86ff15943bf03184a2b8f624ab1c",
+    "radar/helpers.py": "a49a3636e462bbd55d86c23d42ae6e1ffbe56b6f82a1bccd58ed48cfa4732906",
+    "radar/manual.py": "3b8acdc63d2d7a4b1f6d3c122dd4871510bf93bd42183a076f5b30b37837d40d",
+    "radar/notifications.py": "9392b5dae147df20867e73dde5aa9230b1dff6b818b087382c330af0ff13725b",
+    "radar/paths.py": "216c4bedb5d934cbb2807cfd8dbb2db7b451d19daa6faae244e5535070dd2968",
+    "radar/resume.py": "a6375922a9637e17356f401ed7db15869528ee8d1038c49dc682309977f16544",
+    "radar/scoring.py": "ac8dabcf9b80653cb88b8f617e069b9b7fb75299f3cc473c6e462507fb9d9d18",
+    "radar/sources.py": "2bd6a5c1bb2eec2076292d5c4be896ff35fba50c4e3750b847eda490a29dabb3",
+    "radar/updates.py": "da79b6ec841bf79ae3eab171918970cc5b9492caae5ffff0dad9ac02331957e8",
+    "radar/xlsxio.py": "67935152e03068a3a3eac5f007098790f70a55f700634253a3f95384d21489da",
+    "templates/Vagas_template.xlsx": "f6e408316789a8d11c44c070eb3a5cf56972937646b6c5d5e454deeef7f7bf47",
+    "web/assets/app.js": "779f3aedd7f0d8f851e1f9e6e742c5ebbc9bf5aabd6cf5990fa782d160663167",
+    "web/assets/bootstrap.bundle.min.js": "cb789b7cec81aa580177e1b3c0561011539974d243d3a1de0d78a1a278015cab",
+    "web/assets/bootstrap.min.css": "a31a97d0b41c95bbebb09b7c2329a4c672129f8369d96cb6ad8f638e84250c48",
+    "web/assets/custom.css": "79672a938fc514490d420d9276d63a87c29df27b747373730212e6fbb3f0097a",
+    "web/assets/favicon.svg": "666de6d1be09e0a01e687f5fb02fbd98b117b2ceddd4dfe4aa87438ad996244a",
+    "web/assets/tailwind.css": "fc72c25e57b68f591b6d10f84f304ebae859786d5ca77f89870a8e64dffaef86",
+    "web/assets/updates.js": "dc6500ad08567c362d6e1a747241acfaca2624af652ca8247b82bd56abd6844c",
+    "web/index.html": "92b3d57671b3fddb59e9fe1b434ed14eb8554458ef072b81acb0fc057397bf11"
+  }
+}

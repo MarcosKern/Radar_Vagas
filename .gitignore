@@ -38,3 +38,8 @@ data/*
 Thumbs.db
 *.tmp
 *.bak
+
+# Versões instaladas ao executar a distribuição a partir da fonte
+/versions/
+/active
+/pending
