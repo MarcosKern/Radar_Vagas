@@ -43,9 +43,9 @@ class LayoutCustomizationTests(unittest.TestCase):
 
     def test_no_float_button_or_glow(self):
         root=Path(__file__).resolve().parents[1]
-        js=(root/'web/assets/app.js').read_text()
-        css=(root/'web/assets/custom.css').read_text()
-        html=(root/'web/index.html').read_text()
+        js=(root/'web/assets/app.js').read_text(encoding='utf-8')
+        css=(root/'web/assets/custom.css').read_text(encoding='utf-8')
+        html=(root/'web/index.html').read_text(encoding='utf-8')
         self.assertIn('resume-card-btn',js)
         self.assertNotIn('resume-float-btn',js)
         self.assertNotIn('followResumeCursor',js)
