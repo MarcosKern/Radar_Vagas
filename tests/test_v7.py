@@ -128,8 +128,9 @@ class ExecutionEventTests(unittest.TestCase):
             self.assertIn('function '+fn+'(',js)
         self.assertIn("api('executions')",js)
         self.assertIn('refreshFreeModels()',js)
-        self.assertIn('.step-mark::before{content:""',css)
-        self.assertIn('place-items:center;position:relative',css)
+        self.assertIn('function executionStepIcon(status)',js)
+        self.assertIn('class="step-spinner"',js)
+        self.assertIn('.step-mark svg{display:block',css)
         self.assertIn('animation:exec-spin .8s linear infinite',css)
         self.assertIn('@keyframes exec-spin',css)
 
