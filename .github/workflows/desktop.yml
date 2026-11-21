@@ -33,12 +33,6 @@ jobs:
           $exe = Join-Path $moved 'Projeto/Radar de Vagas.exe'
           if (!(Test-Path $exe)) { throw 'Executável ausente' }
           Write-Host ('ShortcutBytes=' + [Convert]::ToBase64String([IO.File]::ReadAllBytes($shortcut)))
-          $shell = New-Object -ComObject Shell.Application
-          $link = $shell.NameSpace($moved).ParseName('Radar de Vagas.lnk').GetLink
-          $link.Resolve(1)
-          $resolved = $link.Path
-          Write-Host "Windows Shell resolveu $resolved"
-          if ($resolved -ne $exe.Replace('/', '\')) { throw "Destino incorreto ao mover a pasta." }
           Start-Process -FilePath $shortcut -WorkingDirectory $env:RUNNER_TEMP
           try {
             $health = $null
@@ -49,6 +43,8 @@ jobs:
             }
             $manifest = Get-Content desktop-release.json -Raw | ConvertFrom-Json
             if ($health.version -ne $manifest.version) { throw "Versão incorreta ou servidor indisponível." }
+            $launched = Get-Process -Name 'Radar de Vagas' | Where-Object Path -eq $exe.Replace('/', '\')
+            if (!$launched) { throw "O atalho não iniciou o executável da pasta movida." }
             $state = Invoke-RestMethod http://127.0.0.1:8765/api/state
             if ($state.jobs.Count -ne 0) { throw "Instalação com dados inesperados." }
           } finally {
