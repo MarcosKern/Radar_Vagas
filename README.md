@@ -11,7 +11,7 @@
 
 Sistema local de monitoramento e organização de oportunidades de TI para Windows, com painel responsivo, importação/exportação de vagas, acompanhamento de candidaturas e geração de currículos personalizáveis por vaga.
 
-**Versão atual:** V0.15 (pré-lançamento). A numeração de desenvolvimento segue `V0.X` até a primeira versão estável. **Toda a documentação e todo o histórico de versões ficam neste único `README.md`**. Não são criados arquivos `CHANGELOG_*.md` separadamente.
+**Versão atual:** V0.16 (pré-lançamento). A numeração de desenvolvimento segue `V0.X` até a primeira versão estável. **Toda a documentação e todo o histórico de versões ficam neste único `README.md`**. Não são criados arquivos `CHANGELOG_*.md` separadamente.
 
 ## Instalação e uso rápido
 
@@ -97,7 +97,7 @@ python monitor.py scan
 python -m unittest discover -s tests -v
 ```
 
-Para gerar um executável Windows x64, instale Go 1.24+ no ambiente de build e rode `python desktop/build.py --manifest` e `python desktop/build.py --package Radar_de_Vagas_V0.15.zip`. O build verifica o SHA-256 do Python embarcado. Para publicar uma atualização da aplicação, incremente a versão, atualize este histórico, gere o manifesto e integre os arquivos juntos na `main`. Mudanças no próprio inicializador ou no Python embarcado exigem uma nova distribuição do executável.
+Para gerar um executável Windows x64, instale Go 1.24+ no ambiente de build e rode `python desktop/build.py --manifest` e `python desktop/build.py --package Radar_de_Vagas_V0.16.zip`. O build verifica o SHA-256 do Python embarcado. Para publicar uma atualização da aplicação, incremente a versão, atualize este histórico, gere o manifesto e integre os arquivos juntos na `main`. Mudanças no próprio inicializador ou no Python embarcado exigem uma nova distribuição do executável.
 
 O servidor web opera em `127.0.0.1`; a busca periódica pode ser agendada com `agendar_buscas.ps1`. Os registros de busca são armazenados localmente. A coleta depende de acesso de rede e da disponibilidade dos provedores.
 
@@ -290,3 +290,7 @@ A integração não altera o formato do XLSX nem os critérios de coleta. Preser
 - Verificação do repositório na abertura, com opção de instalar ou adiar. A aba Atualizações permite consultar novamente e ler o histórico.
 - Atualizações de aplicação usam o manifesto publicado na main, baixam arquivos alterados, conferem SHA-256 e reiniciam o servidor. As versões ficam separadas dos dados. Se a candidata falhar na inicialização, o supervisor volta à anterior.
 - Restauração de oportunidades Nova exportadas com ID em CSV e XLSX. Filtros de oportunidades e exportação de vagas ativas tratam duplicatas entre fontes.
+
+### V0.16 — alinhamento dos indicadores de busca
+
+- Centralizados os símbolos dentro dos indicadores circulares das etapas do monitor de busca, sem alterar cores, tamanhos ou o restante do painel.
