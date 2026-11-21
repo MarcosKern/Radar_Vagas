@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="color-scheme" content="dark"><title>Radar de vagas</title><link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="stylesheet" href="/assets/bootstrap.min.css"><link rel="stylesheet" href="/assets/tailwind.css"><link rel="stylesheet" href="/assets/custom.css"></head>
+<body class="antialiased">
+<div class="layout flex min-h-screen">
+<aside class="sidebar flex flex-col" id="sidebar">
+  <div class="brand flex items-center gap-3"><div class="brand-icon">◉</div><div><strong id="brandTitle">RADAR<span> DE VAGAS</span></strong><small>MONITOR DE CARREIRA</small></div></div>
+  <div class="side-section">WORKSPACE</div>
+  <nav class="nav flex flex-col gap-1" aria-label="Navegação principal" id="sideNav">
+    <button type="button" data-page="dashboard" class="navlink active"><span>▦</span> Visão geral</button>
+    <button type="button" data-page="vagas" class="navlink"><span>⌕</span> Oportunidades <em id="navCount">0</em></button>
+    <button type="button" data-page="candidaturas" class="navlink"><span>▤</span> Candidaturas <em id="applicationsCount">0</em></button>
+    <button type="button" data-page="bloqueados" class="navlink"><span>⊘</span> Bloqueados <em id="blockedCount">0</em></button>
+    <button type="button" data-page="config" class="navlink"><span>⚙</span> Fontes e filtros</button>
+    <button type="button" data-page="relatorios" class="navlink"><span>◫</span> Histórico de buscas</button>
+  </nav>
+  <div class="sidebar-bottom"><div class="userdot">RV</div><div><b>Perfil não configurado</b><small>Monitoramento local</small></div></div>
+</aside>
+<div class="scrim" id="scrim"></div>
+<main class="content w-full min-w-0">
+  <header class="topbar flex flex-wrap items-center justify-between gap-4">
+    <div class="titleline"><button class="small-screen-button" type="button" id="menuBtn" aria-label="Abrir menu">☰</button><div><div class="eyebrow">CAREER INTELLIGENCE / RADAR</div><h1 id="pageTitle">Visão geral</h1><p id="pageSubtitle">Acompanhe oportunidades e candidaturas em um só lugar.</p></div></div>
+    <div class="top-actions flex flex-wrap items-center gap-2">
+      <button class="btn btn-outline-light" type="button" id="importBtn">↑ Importar vagas</button>
+      <button class="btn btn-outline-light" id="openExportDialog" type="button">↓ Exportar vagas</button><button class="btn btn-subtle" type="button" id="downloadTemplateBtn">Modelo XLSX</button>
+      <button class="btn btn-primary" id="manualBtn" type="button">＋ Cadastrar vaga</button>
+    </div>
+  </header>
+  <div class="alertline" id="alertLine" role="status">Inicializando painel...</div>
+
+  <section id="page-dashboard" class="page active">
+    <div class="metrics grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="kpi"><span>VAGAS ATIVAS</span><strong id="mTotal">0</strong><small>Lista monitorada</small></div>
+      <div class="kpi"><span>ALTA ADERÊNCIA</span><strong id="mHigh">0</strong><small>Pontuação ≥ 72</small></div>
+      <div class="kpi"><span>CANDIDATURAS</span><strong id="mApplied">0</strong><small>Em acompanhamento</small></div>
+      <div class="kpi"><span>ENTREVISTAS</span><strong id="mInterviews">0</strong><small>Etapas avançadas</small></div>
+    </div>
+    <div class="split-panels grid gap-3"><div class="panel"><div class="panel-header"><div><h2>Melhores oportunidades</h2><p>Vagas recentes e compatíveis com o perfil configurado</p></div><button type="button" class="btn btn-subtle" data-go="vagas">Ver todas →</button></div><div id="topJobs" class="job-list"></div></div>
+    <div class="panel"><div class="panel-header"><div><h2>Monitor de busca</h2><p>Execução local e fontes de dados</p></div></div><div class="monitor-status"><div><b>Busca automática</b><small id="scanState">Aguardando</small></div><div class="scan-buttons"><button type="button" class="btn btn-primary" id="scanBtn">⌕ Buscar vagas</button><button type="button" class="btn btn-outline-light" id="aiSearchBtn">✦ Buscar com IA</button></div></div><div class="small-stats" id="scanSummary">Nenhuma busca nesta sessão.</div>
+    <div class="execution-monitor" id="executionMonitor" aria-label="Monitor de busca em tempo real" hidden>
+      <div class="execution-head"><div><b id="executionTitle">Acompanhamento de execução</b><span id="executionTime" class="execution-dim"></span></div><span id="executionBadge" class="execution-badge">Preparando</span></div>
+      <div id="executionChoices" class="execution-choices" aria-label="Escolher execução"></div>
+      <div class="execution-progress-meta"><span id="executionStepText">Aguardando etapas</span><span id="executionPercent">0%</span></div>
+      <div class="execution-track" role="progressbar" aria-label="Progresso da execução" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="executionProgress"><div id="executionProgressFill"></div></div>
+      <div id="executionSteps" class="execution-steps"></div>
+      <div class="execution-log-head"><b>Eventos reais do backend</b><span id="executionLogCount">0 evento(s)</span></div>
+      <div class="execution-logs" id="executionLogs" role="log" aria-live="off" aria-label="Logs da pesquisa"></div>
+      <div id="executionMetrics" class="execution-metrics"></div>
+    </div><div class="hintbox">As fontes são públicas e podem apresentar limitações. Vagas importadas e cadastradas manualmente permanecem salvas, mesmo após novas buscas.</div></div></div>
+  </section>
+
+  <section class="page" id="page-vagas">
+    <div class="panel filter-panel opportunity-filter-panel">
+      <button class="opportunity-filter-toggle" type="button" id="opportunityFiltersToggle" aria-expanded="false" aria-controls="opportunityFiltersBody">
+        <span class="opportunity-filter-head"><strong>Explorar oportunidades</strong><small>Filtre os anúncios ativos, salvos ou ignorados</small></span>
+        <span class="opportunity-filter-controls"><span class="opportunity-filter-count" id="opportunityFiltersCount" hidden></span><span class="opportunity-filter-chevron" aria-hidden="true">⌄</span></span>
+      </button>
+      <div class="opportunity-filters-body" id="opportunityFiltersBody" hidden>
+        <div class="opportunity-filters-actions"><button class="btn btn-subtle" type="button" id="resetFilters">Limpar filtros</button></div>
+      <div class="filters-grid grid gap-3">
+        <input id="searchInput" class="input" type="search" placeholder="Pesquisar cargo, empresa, tecnologia..." aria-label="Pesquisa de vagas">
+        <select id="modeFilter" class="input"><option value="all">Todas modalidades</option><option value="remote">Remotas</option><option value="local">Locais / híbridas</option></select>
+        <select id="statusFilter" class="input"><option value="all">Todos status</option></select>
+        <select id="sourceFilter" class="input"><option value="all">Todas fontes</option></select>
+        <select id="viewFilter" class="input"><option value="active">Ativas</option><option value="all">Todas</option><option value="saved">Salvas</option><option value="ignored">Ignoradas</option><option value="unprocessed">Não tratadas</option></select>
+        <select id="sortFilter" class="input"><option value="new">Mais recentes</option><option value="score">Maior aderência</option><option value="title">Cargo A–Z</option></select>
+      </div><label class="checkboxline"><input type="checkbox" id="hideProcessed"> Ocultar vagas já cadastradas/tratadas (candidatura, rejeitada ou descartada)</label>
+      </div>
+    </div>
+    <div class="list-heading"><h3 id="jobsCount">Oportunidades</h3><span>Abra o anúncio para se candidatar e depois registre a candidatura no Radar.</span></div>
+    <div id="jobsList" class="job-list"></div>
+  </section>
+
+  <section class="page" id="page-bloqueados"><div class="panel"><div class="panel-header"><div><h2>Vagas bloqueadas</h2><p>Excluídas de novas coletas e alertas, mas preservadas para possível reativação.</p></div></div><div class="list-heading"><h3 id="blockedTitle">Bloqueadas</h3><span>Reative pelo botão no card ou por Gerenciar.</span></div><div id="blockedList" class="job-list"></div></div></section>
+
+  <section class="page" id="page-candidaturas"><div class="panel"><div class="panel-header"><div><h2>Pipeline de candidaturas</h2><p>Clique em “Gerenciar” para atualizar status, recrutador, datas e observações.</p></div></div><div id="pipeline" class="pipeline"></div></div><div class="panel filter-panel application-filters" aria-labelledby="appliedFiltersTitle">
+    <div class="panel-header"><div><h2 id="appliedFiltersTitle">Filtrar candidaturas</h2><p>Filtros independentes das oportunidades. As notas e o histórico são preservados.</p></div><div class="filter-panel-actions"><button class="btn btn-subtle" type="button" id="appliedToggle" aria-expanded="false" aria-controls="appliedFiltersBody">Mostrar filtros ▾</button><button class="btn btn-subtle" type="button" id="appliedReset">Limpar filtros</button></div></div>
+    <div id="appliedFiltersBody" class="application-filters-body" hidden>
+      <div class="application-filter-grid">
+        <label class="form-field field-wide">Cargo, empresa ou observações<input class="input" id="appliedSearch" type="search" placeholder="Buscar nas candidaturas..."></label>
+        <label class="form-field">Etapa<select class="input" id="appliedStatus"><option value="all">Todas as etapas</option></select></label>
+        <label class="form-field">Empresa<select class="input" id="appliedCompany"><option value="all">Todas as empresas</option></select></label>
+        <label class="form-field">Modalidade<select class="input" id="appliedMode"><option value="all">Todas</option><option value="Remoto">Remoto</option><option value="Híbrido">Híbrido</option><option value="Presencial">Presencial</option><option value="Não informado">Não informada</option></select></label>
+        <label class="form-field">Acompanhamento<select class="input" id="appliedFollowup"><option value="all">Todas as datas</option><option value="pending">Pendente (até hoje)</option><option value="week">Próximos 7 dias</option><option value="future">Agendado no futuro</option><option value="without">Sem data definida</option></select></label>
+        <label class="form-field">Data inicial<input class="input" id="appliedFrom" type="date"></label>
+        <label class="form-field">Data final<input class="input" id="appliedTo" type="date"></label>
+        <label class="form-field">Ordenar<select class="input" id="appliedSort"><option value="stage">Etapas mais avançadas</option><option value="recent">Mais recentes</option><option value="followup">Acompanhamento próximo</option><option value="company">Empresa (A–Z)</option><option value="score">Maior aderência</option></select></label>
+      </div>
+      <div class="application-filter-footer"><label class="checkboxline"><input id="appliedIncludeBlocked" type="checkbox" checked> Incluir candidaturas de vagas bloqueadas</label><strong id="appliedFilterCount" aria-live="polite">0 candidaturas</strong></div>
+      <small class="date-hint">O intervalo considera a data de candidatura, quando informada; caso contrário, a data do primeiro registro no sistema.</small>
+    </div>
+   </div>
+   <div class="list-heading"><h3>Candidaturas acompanhadas</h3><span>Gerencie etapas, contatos, anotações e próximos passos</span></div><div id="appliedList" class="job-list"></div></section>
+
+  <section class="page" id="page-config">
+    <div class="section-heading"><h2>Preferências de busca</h2><p>Fontes agrupadas por categoria, termos individuais como cards e controle de custo.</p></div>
+    <div class="config-shell">
+      <aside class="config-nav-shell">
+        <nav class="config-tabs" id="configTabs" aria-label="Seções das configurações" role="tablist">
+          <button type="button" role="tab" aria-selected="true" class="config-tab active" data-config-tab="rules"><span class="config-tab-label">Regras</span></button>
+          <button type="button" role="tab" aria-selected="false" class="config-tab" data-config-tab="exclusions"><span class="config-tab-label">Exclusões</span></button>
+          <button type="button" role="tab" aria-selected="false" class="config-tab" data-config-tab="sources"><span class="config-tab-label">Fontes</span></button>
+          <button type="button" role="tab" aria-selected="false" class="config-tab" data-config-tab="terms"><span class="config-tab-label">Termos</span></button>
+          <button type="button" role="tab" aria-selected="false" class="config-tab" data-config-tab="ai"><span class="config-tab-label">IA</span></button>
+          <button type="button" role="tab" aria-selected="false" class="config-tab" data-config-tab="resume"><span class="config-tab-label">Currículo</span></button>
+          <button type="button" role="tab" aria-selected="false" class="config-tab" data-config-tab="appearance"><span class="config-tab-label">Aparência</span></button>
+          <button type="button" role="tab" aria-selected="false" class="config-tab" data-config-tab="backup"><span class="config-tab-label">Backup JSON</span></button>
+        </nav>
+      </aside>
+      <div class="config-panels">
+    <div class="panel" data-config-panel="rules" role="tabpanel"><div class="settings-section-heading"><div class="settings-section-copy"><h3>Regras da pesquisa</h3><p>Defina os critérios para selecionar e priorizar as oportunidades encontradas.</p></div></div><div class="settings-grid grid gap-3">
+      <label class="form-field">Idade máxima da vaga (dias)<input class="input" type="number" min="1" max="100" id="cfgAge"></label>
+      <label class="form-field">Aderência mínima (0–100)<input class="input" type="number" min="0" max="100" id="cfgScore"></label>
+      <label class="form-field">Prioridade de alerta (0–100)<input class="input" type="number" min="0" max="100" id="cfgAlert"></label>
+      <label class="form-field">Combinações por fonte (máx. 20)<input class="input" type="number" min="1" max="20" id="cfgMaxQueries"></label>
+    </div>
+    <div class="options-list"><label><input type="checkbox" id="cfgRemoteEnabled"> Vagas remotas brasileiras e internacionais</label><label><input type="checkbox" id="cfgLocalEnabled"> Híbridas e presenciais na região do RS</label><label><input type="checkbox" id="cfgStrict"> Excluir vagas internacionais sem elegibilidade Brasil</label><label><input type="checkbox" id="cfgQueryCombos"> Gerar combinações automáticas de cargos e competências, com rotação diária</label></div>
+    </div>
+    <div class="panel config-panel exclusion-panel" data-config-panel="exclusions" role="tabpanel" hidden id="exclusionPanel" aria-labelledby="exclusionHeading">
+      <div class="settings-section-heading">
+        <div class="settings-section-copy"><h3 id="exclusionHeading">Exclusões automáticas</h3><p>Evite vagas fora do perfil sem bloquear anúncios manualmente. As regras são aplicadas às buscas normais e com IA, antes da pontuação.</p></div>
+        <div class="exclusion-quick-actions"><span class="exclusion-stat" id="exclusionSummary">6 categorias ativas</span><button type="button" id="resetExclusions" class="btn btn-outline-light">Restaurar padrão</button></div>
+      </div>
+      <div class="exclusion-layout">
+        <div class="exclusion-main">
+          <div class="exclusion-group-heading"><strong>Senioridade e cargos</strong><small>Selecione o que não deseja receber nas buscas.</small></div>
+          <div id="excludeLevelGrid" class="exclusion-grid" role="group" aria-label="Excluir vagas por nível profissional"></div>
+          <div class="exclusion-custom-block">
+            <div class="exclusion-group-heading"><strong>Palavras e expressões personalizadas</strong><small>Correspondência por palavra inteira no título, nível ou indicação explícita da descrição.</small></div>
+            <div class="exclusion-term-entry"><input class="input" id="exclusionCustomInput" maxlength="65" placeholder="Ex.: Engineering Manager, Analyst III" aria-label="Novo termo de exclusão"><button type="button" class="btn btn-primary" id="excludeTermsAdd">＋ Adicionar</button></div>
+            <div id="excludedTerms" class="exclusion-chips" aria-label="Expressões de exclusão"></div>
+            <small id="exclusionCustomCount" class="exclusion-caption">0/40 termos</small>
+          </div>
+        </div>
+        <div class="exclusion-aside">
+          <div class="exclusion-info"><div class="exclusion-info-icon" aria-hidden="true">◎</div><strong>Filtragem contextual</strong><p>O sistema diferencia o nível da vaga de simples referências à equipe. Ex.: “Junior Analyst working with senior engineers” permanece visível.</p><div class="exclusion-line"><span class="exclusion-mini-mark"></span> Descartes automáticos são reversíveis</div><div class="exclusion-line"><span class="exclusion-mini-mark"></span> Bloqueios manuais continuam separados</div></div>
+          <form id="exclusionPreviewForm" class="exclusion-preview"><label for="exclusionPreviewTitle">Teste uma vaga antes de salvar</label><input id="exclusionPreviewTitle" class="input" required maxlength="180" placeholder="Ex.: Analista de Infraestrutura Pleno"><label for="exclusionPreviewCompany" class="exclusion-preview-company-label">Empresa (opcional)</label><input id="exclusionPreviewCompany" class="input" maxlength="150" placeholder="Ex.: Senior Sistemas"><button class="btn btn-outline-light" type="submit">Testar exclusão</button><p id="exclusionPreviewResult" role="status" aria-live="polite">Digite um cargo para verificar o resultado da regra.</p></form>
+        </div>
+      </div>
+    </div>
+    <div class="panel" data-config-panel="sources" role="tabpanel" hidden><div class="settings-section-heading"><div class="settings-section-copy"><h3>Fontes de vagas</h3><p>Ative ou desative cada conector. Plataformas ATS exigem empresas ou boards cadastrados na aba Termos.</p></div></div><div id="sourceGroups"></div></div>
+    <div class="panel" data-config-panel="terms" role="tabpanel" hidden><div class="settings-section-heading"><div class="settings-section-copy"><h3>Termos de pesquisa e empresas</h3><p>Digite um termo e pressione Enter ou clique em “Adicionar”. Remova um card pelo × para manter os filtros organizados.</p></div></div><div id="tagGroups" class="tag-groups"></div></div>
+    <div class="panel" data-config-panel="ai" role="tabpanel" hidden><div class="settings-section-heading"><div class="settings-section-copy"><h3>Busca com IA na nuvem</h3><p>Configure o Google Gemini sem instalar modelos. A pesquisa utiliza fontes públicas de vagas; Google Search Grounding permanece desativado para evitar cobranças.</p></div></div>
+      <div class="settings-grid grid gap-3 ai-cloud-grid">
+        <label class="form-field span-2">Chave da API Gemini (armazenada apenas no computador)<input class="input" id="cfgGeminiKey" type="password" autocomplete="new-password" placeholder="Cole aqui a chave gerada no Google AI Studio"></label>
+        <label class="form-field">Modelo<select class="input" id="cfgAiModel"><option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite · gratuito · recomendado</option><option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite · gratuito</option></select></label>
+        <div class="model-availability panel-mini"><button type="button" class="btn btn-outline-light" id="refreshAiModelsBtn">Atualizar modelos disponíveis</button><div class="model-availability-copy"><strong>Modelos gratuitos validados</strong><small id="aiModelsMessage" role="status" aria-live="polite">Cadastre uma chave para confirmar quais estão disponíveis para o seu projeto.</small></div></div>
+        <label class="form-field">Buscas com IA por dia<input class="input" type="number" min="0" max="10" id="cfgAiCap"></label>
+        <label class="form-field">Máximo de tokens de resposta<input class="input" type="number" min="100" max="3000" id="cfgAiTokens"></label>
+        <label class="form-field span-2"><span>Pesquisa web com Google Search</span><span class="flex gap-2 items-center"><input type="checkbox" id="cfgAiWebSearch" disabled> Solicitar Grounding (indisponível no plano gratuito atual; ignorado para evitar cobranças)</span></label>
+      </div>
+      <div class="ai-actions" style="flex-wrap:wrap;gap:10px;margin-top:12px"><button type="button" class="btn btn-primary" id="saveAiKeyBtn">Salvar chave</button><button type="button" class="btn btn-outline-light" id="testAiKeyBtn">Testar conexão</button><button type="button" class="btn btn-danger-subtle" id="clearAiKeyBtn">Remover chave</button><a class="btn btn-outline-light" target="_blank" rel="noopener noreferrer" href="https://aistudio.google.com/apikey">Obter chave grátis ↗</a></div>
+      <p class="helptext" id="aiKeyStatus" role="status">Aguardando verificação de chave.</p>
+      <div class="ai-actions"><span id="aiUsage">Nenhuma consulta hoje.</span><span>O botão “Buscar com IA” fica ao lado de “Buscar vagas” na tela inicial.</span></div>
+      <div class="ai-guide"><strong>Configuração rápida</strong><ol><li><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">Abra o Google AI Studio</a> e crie a chave gratuita.</li><li>Cole a chave acima e clique em <b>Salvar chave</b>.</li><li>Use <b>Testar conexão</b> para verificar o acesso.</li></ol><p>Escolha um projeto sem faturamento para utilizar a cota gratuita. Testar conexão não consome tokens de geração; a disponibilidade de cota é verificada no momento da busca.</p></div>
+    </div>
+
+    <div class="panel resume-settings-panel" data-config-panel="resume" role="tabpanel" hidden>
+      <div class="settings-section-heading"><div class="settings-section-copy"><h3>Modelo de currículo por vaga</h3><p>Edite os dados verdadeiros da candidata. O Radar destaca termos encontrados no anúncio, sem acrescentar qualificações não declaradas.</p></div>
+        <div class="resume-template-actions"><button class="btn btn-outline-light" type="button" id="resumeDownloadPt">↓ Modelo em português</button><button class="btn btn-outline-light" type="button" id="resumeDownloadEn">↓ English template</button></div>
+      </div>
+      <div class="resume-config-group"><h4>Apresentação do documento</h4>
+        <div class="resume-config-grid">
+          <label class="form-field">Idioma padrão<select class="input" id="resumeDefaultLanguage"><option value="pt">Português</option><option value="en">English</option></select></label>
+          <label class="form-field">Fonte<select class="input" id="resumeFont"><option value="Arial">Arial</option><option value="Calibri">Calibri</option><option value="Aptos">Aptos</option><option value="Liberation Sans">Liberation Sans</option></select></label>
+          <label class="form-field">Cor de destaque<input type="color" class="input resume-color" id="resumeAccent" value="#5367A4"></label>
+          <label class="form-field">Máximo de competências<input class="input" id="resumeMaxSkills" type="number" min="6" max="35"></label>
+          <label class="form-field">Realizações por experiência<input class="input" id="resumeMaxBullets" type="number" min="1" max="7"></label>
+        </div>
+        <div class="resume-choices"><label><input id="resumeIncludeProjects" type="checkbox"> Incluir projetos técnicos</label><label><input id="resumeIncludeCertifications" type="checkbox"> Incluir certificações</label><label><input id="resumeIncludeLanguages" type="checkbox"> Incluir idiomas</label></div>
+      </div>
+      <div class="resume-config-group resume-layout-editor" id="resumeLayoutEditor"><div class="resume-layout-title"><div><h4>Personalizador de layout</h4><p>Edite a aparência, reorganize as seções e veja uma prévia ilustrativa. As escolhas são aplicadas ao arquivo Word.</p></div><button type="button" class="btn btn-outline-light" id="resumeResetLayout">Restaurar layout padrão</button></div>
+        <div class="resume-layout-columns">
+          <div class="resume-layout-controls">
+            <div class="resume-config-grid">
+              <label class="form-field">Estilo<select class="input" id="resumeLayoutPreset"><option value="classic">Clássico ATS</option><option value="compact">Compacto</option><option value="modern">Moderno discreto</option></select></label>
+              <label class="form-field">Papel<select class="input" id="resumePageSize"><option value="A4">A4</option><option value="Letter">Carta / Letter</option></select></label>
+              <label class="form-field">Margens (mm)<input type="number" class="input" id="resumeMargin" min="10" max="30" step="1"></label>
+              <label class="form-field">Tamanho do texto (pt)<input type="number" class="input" id="resumeBodySize" min="8" max="12" step="1"></label>
+              <label class="form-field">Nome (pt)<input type="number" class="input" id="resumeNameSize" min="14" max="26" step="1"></label>
+              <label class="form-field">Seções (pt)<input type="number" class="input" id="resumeSectionSize" min="9" max="15" step="1"></label>
+              <label class="form-field">Entrelinhas<select class="input" id="resumeLineSpacing"><option value="1">1,00</option><option value="1.12">1,12</option><option value="1.25">1,25</option><option value="1.5">1,50</option></select></label>
+              <label class="form-field">Espaço entre seções (pt)<input class="input" type="number" min="0" max="18" step="1" id="resumeSectionSpacing"></label>
+              <label class="form-field">Alinhamento do cabeçalho<select class="input" id="resumeHeaderAlignment"><option value="left">À esquerda</option><option value="center">Centralizado</option></select></label>
+              <label class="form-field">Idioma da prévia<select class="input" id="resumePreviewLanguage"><option value="pt">Português</option><option value="en">English</option></select></label>
+            </div>
+            <div class="resume-order-title"><strong>Ordem das seções</strong><small>Utilize as setas para reorganizar o documento.</small></div>
+            <div id="resumeSectionOrder" class="resume-section-order"></div>
+          </div>
+          <div class="resume-preview-wrap"><div class="resume-preview-top"><strong>Prévia do documento</strong><small>Ilustrativa · alterações em tempo real</small></div><div class="resume-page-viewport"><div id="resumePagePreview" class="resume-page-preview" aria-label="Prévia do currículo"></div></div><p class="resume-preview-note">A paginação final pode variar no Microsoft Word conforme a fonte instalada e o conteúdo.</p></div>
+        </div>
+      </div>
+      <div class="resume-config-group"><h4>Dados de contato</h4><div class="resume-config-grid">
+        <label class="form-field">Nome completo<input id="resumeFullName" class="input"></label>
+        <label class="form-field">E-mail<input id="resumeEmail" class="input" type="email"></label>
+        <label class="form-field">Telefone<input id="resumePhone" class="input"></label>
+        <label class="form-field">Localização<input id="resumeLocation" class="input"></label>
+        <label class="form-field">LinkedIn<input id="resumeLinkedin" class="input"></label>
+        <label class="form-field">GitHub<input id="resumeGithub" class="input"></label>
+      </div></div>
+      <details class="resume-details" open><summary><strong>Versão em português</strong><span>Resumo, experiências, formação e competências</span></summary><div id="resumeFieldsPt" class="resume-long-fields"></div></details>
+      <details class="resume-details"><summary><strong>English version</strong><span>Summary, experience, education and skills</span></summary><div id="resumeFieldsEn" class="resume-long-fields"></div></details>
+      <div class="resume-editor-note">Use <b>Empresa | Cargo | Período</b> na primeira linha de cada experiência; abaixo, descreva as atividades iniciadas por hífen. Separe empresas com uma linha em branco. Formação, certificações e projetos: um registro por linha, com dados separados por <b>|</b>. Os campos podem ser alterados sem perder os originais até clicar em Salvar preferências.</div>
+      <div class="resume-settings-footer"><span>O arquivo gerado será um <b>.docx editável</b>, em coluna única e sem foto.</span><button class="btn btn-primary" id="resumeSaveSettings" type="button">Salvar modelo e perfil</button></div>
+    </div>
+    <div class="panel" data-config-panel="appearance" role="tabpanel" hidden><div class="settings-section-heading"><div class="settings-section-copy"><h3>Aparência e navegação</h3><p>Edite a identificação do aplicativo, os títulos e os itens do menu. Reordene ou oculte itens opcionais sem perder acesso a Bloqueados e Configurações.</p></div></div><label class="form-field" style="max-width:480px">Nome do aplicativo<input class="input" id="cfgBrand" maxlength="65"></label><div id="menuCustomizer" class="menu-customizer"></div></div>
+    <div class="panel" data-config-panel="backup" role="tabpanel" hidden>
+      <div class="settings-section-heading"><div class="settings-section-copy"><h3>Importar e exportar configurações</h3><p>Transfira fontes, filtros, opções de busca, menus e currículo para outra instalação.</p></div></div>
+      <div class="backup-row"><div><strong>Exportar configurações</strong><p>Arquivo JSON com as preferências do Radar. Não inclui banco de vagas, histórico de candidaturas nem chave Gemini.</p></div><button type="button" class="btn btn-primary" id="exportSettingsJsonBtn">↓ Baixar JSON</button></div>
+      <div class="backup-row"><div><strong>Importar configurações</strong><p>Escolha um backup JSON compatível. A chave do Gemini e as candidaturas existentes permanecem intactas.</p></div><form id="settingsImportForm" class="backup-import"><input id="settingsJsonFile" type="file" accept=".json,application/json" class="input" required aria-label="Arquivo JSON de configurações"><button type="submit" class="btn btn-outline-light" id="importSettingsJsonBtn">↑ Importar JSON</button></form></div>
+      <p class="helptext" id="settingsImportResult" role="status" aria-live="polite">O JSON pode conter dados pessoais preenchidos no perfil de currículo. Guarde em local privado.</p>
+    </div>
+    <div class="save-row config-save-row"><span>As alterações nas abas são aplicadas ao salvar.</span><button class="btn btn-primary" id="saveSettingsBtn" type="button">Salvar preferências</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page" id="page-relatorios"><div class="panel"><div class="panel-header"><div><h2>Histórico de execuções</h2><p>Coletas, deduplicação, erros e desempenho das fontes</p></div></div><div id="runList" class="runs"></div></div><div class="panel"><div class="panel-header"><div><h2>Histórico de buscas com IA</h2><p>Termos gerados pelo Gemini e anúncios verificados em fontes públicas</p></div></div><div id="aiRunList" class="runs"></div></div></section>
+
+  <footer class="footer">RADAR DE VAGAS · V0.14 · DADOS LOCAIS · SEM CANDIDATURA AUTOMÁTICA</footer>
+</main></div>
+<div id="toastStack" class="toast-stack" role="status" aria-live="polite"></div>
+
+<dialog class="modal-box" id="manualDialog" aria-labelledby="manualDialogTitle"><form id="manualForm"><div class="modal-head"><div><h2 id="manualDialogTitle">Cadastrar vaga</h2><p>Adicione uma oportunidade de qualquer portal, com ou sem URL.</p></div><button type="button" class="close-button" data-close="manualDialog">✕</button></div>
+  <div class="modal-grid grid gap-3"><label class="form-field">Cargo *<input id="manTitle" class="input" required minlength="2" maxlength="180"></label><label class="form-field">Empresa *<input id="manCompany" class="input" required minlength="2" maxlength="140"></label><label class="form-field span-2">Link do anúncio<input id="manUrl" class="input" type="url" placeholder="https://..."></label><label class="form-field">Localização<input id="manLocation" class="input"></label><label class="form-field">Modalidade<select id="manMode" class="input"><option>Não informado</option><option>Remoto</option><option>Híbrido</option><option>Presencial</option></select></label><label class="form-field">Senioridade<input id="manLevel" class="input" placeholder="Júnior, Analyst I..."></label><label class="form-field">Salário<input id="manSalary" class="input"></label><label class="form-field">Publicado em<input id="manPublished" class="input" type="date"></label><label class="form-field">Elegibilidade Brasil<select id="manEligible" class="input"><option value="unknown">Não confirmada</option><option value="yes">Sim</option><option value="no">Não</option></select></label><label class="form-field">Status<select id="manStatus" class="input"></select></label><label class="form-field">Próximo contato<input id="manFollowup" class="input" type="date"></label><label class="form-field">Tipo de contrato<input id="manContract" class="input" placeholder="CLT, PJ, Estágio..."></label><label class="form-field">Recrutador / Contato<input id="manRecruiter" class="input"></label><label class="form-field span-2">Descrição da vaga<textarea id="manDescription" class="input" rows="3"></textarea></label><label class="form-field span-2">Anotações da candidatura<textarea id="manNotes" class="input" rows="4" placeholder="Contato, entrevistas, feedbacks, próximos passos..."></textarea></label></div>
+  <div class="form-error" id="manualError" role="alert"></div><div class="dialog-footer"><button type="button" class="btn btn-outline-light" data-close="manualDialog">Cancelar</button><button type="submit" class="btn btn-primary" id="manualSubmit">Salvar vaga</button></div></form></dialog>
+
+<dialog class="modal-box" id="manageDialog" aria-labelledby="manageTitle"><div class="modal-head"><div><h2 id="manageTitle">Gerenciar candidatura</h2><p id="manageSubtitle"></p></div><button type="button" class="close-button" data-close="manageDialog">✕</button></div><div id="manageReasons" class="hintbox"></div>
+  <form id="manageForm"><div class="modal-grid grid gap-3"><label class="form-field">Etapa / status<select id="manageStatus" class="input"></select></label><label class="form-field">Próximo acompanhamento<input id="manageFollowup" class="input" type="date"></label><label class="form-field">Tipo de contrato<input id="manageContract" class="input"></label><label class="form-field">Contato / recrutador<input id="manageRecruiter" class="input"></label><label class="form-field span-2">Anotações da candidatura<textarea id="manageNotes" class="input" rows="6" placeholder="Registre datas, retornos, feedback, pretensão salarial, contatos..."></textarea></label></div>
+    <section class="application-history" aria-labelledby="manageHistoryTitle">
+      <div class="application-history-header"><div><h3 id="manageHistoryTitle">Histórico de movimentações</h3><p>Data, hora e mudanças de etapa registradas automaticamente.</p></div><span id="manageHistoryCount" class="application-history-count">0 eventos</span></div>
+      <div id="manageHistoryList" class="application-history-list" role="status" aria-live="polite" aria-busy="false"><p class="application-history-empty">Carregando histórico...</p></div>
+    </section>
+    <div id="manageError" class="form-error" role="alert"></div><div class="dialog-footer dialog-footer-spaced"><div><button type="button" id="manageIgnore" class="btn btn-danger-subtle">Bloquear vaga</button><button type="button" id="manageEdit" class="btn btn-outline-light">Editar cadastro</button><button type="button" id="manageDelete" class="btn btn-danger-subtle">Excluir cadastro</button></div><div><a id="manageUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light">Abrir anúncio ↗</a><button type="submit" class="btn btn-primary" id="manageSave">Salvar alterações</button></div></div></form></dialog>
+
+<dialog class="modal-box export-dialog" id="exportDialog" aria-labelledby="exportDialogTitle">
+  <div class="modal-head"><div><h2 id="exportDialogTitle">Exportar vagas</h2><p>Escolha quais registros serão incluídos. Por padrão, somente candidaturas registradas.</p></div><button class="close-button" type="button" data-close="exportDialog">✕</button></div>
+  <div class="export-filters-grid">
+    <label class="form-field">Quais vagas<select id="exportScope" class="input"><option value="applications">Somente candidaturas</option><option value="all">Todas as vagas</option><option value="active">Oportunidades ativas</option><option value="saved">Vagas salvas</option><option value="blocked">Vagas bloqueadas</option></select></label>
+    <label class="form-field">Status<select id="exportStatus" class="input"><option value="all">Todas as etapas</option></select></label>
+    <label class="form-field">Empresa<select id="exportCompany" class="input"><option value="">Todas as empresas</option></select></label>
+    <label class="form-field">Modalidade<select id="exportMode" class="input"><option value="all">Todas</option><option>Remoto</option><option>Híbrido</option><option>Presencial</option><option>Não informado</option></select></label>
+    <label class="form-field">Pesquisar vaga<input id="exportQuery" class="input" type="search" placeholder="Cargo, empresa ou anotação"></label>
+    <label class="form-field">Filtrar data de<select id="exportDateField" class="input"><option value="applied_at">Candidatura</option><option value="published">Publicação</option><option value="first_seen">Primeiro registro</option></select></label>
+    <label class="form-field">A partir de<input id="exportDateFrom" class="input" type="date"></label>
+    <label class="form-field">Até<input id="exportDateTo" class="input" type="date"></label>
+  </div>
+  <label class="checkboxline export-blocked-toggle"><input id="exportIncludeBlocked" type="checkbox" checked> Incluir candidaturas de vagas bloqueadas</label>
+  <div class="export-preview"><div><strong id="exportPreviewCount">Preparando prévia...</strong><p id="exportPreviewBreakdown" aria-live="polite">A prévia considera apenas os filtros desta janela.</p></div><button class="btn btn-subtle" type="button" id="exportResetBtn">Restaurar filtros</button></div>
+  <div class="dialog-footer"><button type="button" class="btn btn-outline-light" data-close="exportDialog">Cancelar</button><button class="btn btn-outline-light" type="button" id="exportCsvBtn">↓ Exportar CSV</button><button class="btn btn-primary" type="button" id="exportXlsxBtn">↓ Exportar XLSX</button></div>
+</dialog>
+<dialog class="modal-box small-dialog" id="importDialog"><div class="modal-head"><div><h2>Importar vagas</h2><p>Formatos XLSX e CSV, com colunas opcionais.</p></div><button class="close-button" type="button" data-close="importDialog">✕</button></div><form id="importForm"><label class="form-field">Arquivo XLSX ou CSV<input type="file" id="xlsxFile" class="input" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" required></label><div class="hintbox">Apenas cargo e empresa são obrigatórios. Linhas com status explicitamente “Nova” são ignoradas. Registros existentes não perderão anotações e as candidaturas serão preservadas.</div><div id="importResult" class="import-result" role="status"></div><div class="dialog-footer"><button class="btn btn-outline-light" type="button" data-close="importDialog">Cancelar</button><button type="submit" id="importSubmit" class="btn btn-primary">Importar vagas</button></div></form></dialog>
+<dialog class="modal-box small-dialog" id="confirmActionDialog" aria-labelledby="confirmActionTitle"><div class="modal-head"><div><h2 id="confirmActionTitle">Confirmar ação</h2><p id="confirmActionText">Deseja continuar?</p></div><button class="close-button" type="button" data-close="confirmActionDialog">✕</button></div><div class="dialog-footer"><button class="btn btn-outline-light" type="button" data-close="confirmActionDialog">Cancelar</button><button class="btn btn-primary" type="button" id="confirmActionBtn">Confirmar</button></div></dialog>
+
+<dialog class="modal-box small-dialog" id="resumeDialog" aria-labelledby="resumeDialogTitle">
+  <div class="modal-head"><div><h2 id="resumeDialogTitle">Currículo para esta vaga</h2><p id="resumeJobText">Personalizar currículo conforme a oportunidade.</p></div><button class="close-button" type="button" data-close="resumeDialog">✕</button></div>
+  <div class="resume-dialog-body"><label class="form-field">Idioma de geração<select class="input" id="resumeLanguage"><option value="pt">Português (Brasil)</option><option value="en">English</option></select></label>
+    <div id="resumeMatchInfo" class="resume-match-info" aria-live="polite">Verificando competências em comum...</div>
+    <div id="resumeMatchChips" class="resume-match-chips"></div>
+    <p class="resume-dialog-notice">O currículo utiliza somente dados cadastrados em Configurações → Currículo. A descrição da vaga influencia a ordem das informações, não adiciona experiências fictícias.</p>
+  </div>
+  <div class="dialog-footer"><button type="button" class="btn btn-outline-light" id="resumeConfigureBtn">Personalizar modelo</button><a id="resumeDownloadBtn" class="btn btn-primary" href="#">↓ Baixar currículo .docx</a></div>
+</dialog>
+<script src="/assets/bootstrap.bundle.min.js"></script><script src="/assets/app.js" defer></script>
+</body></html>
