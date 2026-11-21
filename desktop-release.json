@@ -1,8 +1,8 @@
 {
-  "version": "V0.18",
+  "version": "V0.19",
   "files": {
-    "README.md": "5a316440d0427bc18f81c453941d38e055a2a34a0463465e02f1f9799a9028ee",
-    "monitor.py": "4006b074fe6c8f1a35913a0851c65c338acafbf2ef336b532e6ff7c16150b1d7",
+    "README.md": "8de6dfcd8cb1e73dc310a960054a34b3d6feb0bf834077f78940bdbe43a0809a",
+    "monitor.py": "0ff10dab596f479d8dcd4f8e9d87bdea4ffc4db25af1bdfe8f6d0cf5a3864ab3",
     "radar/__init__.py": "ea6353c993d07b97b38344dd41f079c3e2ebee5e9fbeb2aa1e1cfb3a06f6623c",
     "radar/ai_search.py": "722206c0e0b881dc1ff016a89eaa42bf5eb087bd3143a84fac2f4d466d87d8e9",
     "radar/csvio.py": "6d17a7823d81eb6e5017bf6a2a06d66ccc628ac50c7fc24f3106850f2db2d886",
@@ -11,22 +11,22 @@
     "radar/executions.py": "2a6564b27228961013bb80d9453b1ffd023edacd2b2609caf87a5c5beb3a4ab8",
     "radar/export_filters.py": "577d6671b7d99cbe89e7e2d430e2307b52ed86ff15943bf03184a2b8f624ab1c",
     "radar/helpers.py": "a49a3636e462bbd55d86c23d42ae6e1ffbe56b6f82a1bccd58ed48cfa4732906",
-    "radar/manual.py": "3b8acdc63d2d7a4b1f6d3c122dd4871510bf93bd42183a076f5b30b37837d40d",
+    "radar/manual.py": "3de46174948916243f31d369c53e9fe9bacef2a9c28f3a658f6569baa4a65f13",
     "radar/notifications.py": "9392b5dae147df20867e73dde5aa9230b1dff6b818b087382c330af0ff13725b",
     "radar/paths.py": "216c4bedb5d934cbb2807cfd8dbb2db7b451d19daa6faae244e5535070dd2968",
     "radar/resume.py": "a6375922a9637e17356f401ed7db15869528ee8d1038c49dc682309977f16544",
     "radar/scoring.py": "ac8dabcf9b80653cb88b8f617e069b9b7fb75299f3cc473c6e462507fb9d9d18",
-    "radar/sources.py": "2bd6a5c1bb2eec2076292d5c4be896ff35fba50c4e3750b847eda490a29dabb3",
+    "radar/sources.py": "5e736d0a3afe17da79d2f75cad16ef89e8e899de061eaf8b36e961de46b172fc",
     "radar/updates.py": "da79b6ec841bf79ae3eab171918970cc5b9492caae5ffff0dad9ac02331957e8",
     "radar/xlsxio.py": "67935152e03068a3a3eac5f007098790f70a55f700634253a3f95384d21489da",
     "templates/Vagas_template.xlsx": "f6e408316789a8d11c44c070eb3a5cf56972937646b6c5d5e454deeef7f7bf47",
-    "web/assets/app.js": "4dc5168911c072ea6d9c2c878d3ba09bf8cddf355af4a5bbc501c7c83420b7d2",
+    "web/assets/app.js": "3493def8c5e9de7e134ac84a1c0eb0f9612ec7e461ad38d3bfc9a157b116b129",
     "web/assets/bootstrap.bundle.min.js": "cb789b7cec81aa580177e1b3c0561011539974d243d3a1de0d78a1a278015cab",
     "web/assets/bootstrap.min.css": "a31a97d0b41c95bbebb09b7c2329a4c672129f8369d96cb6ad8f638e84250c48",
-    "web/assets/custom.css": "5bdd3cc8557c2d6784c8d39d91bf799b5b3e2f72b39f92732d2008b577adead6",
+    "web/assets/custom.css": "06376f7b14654f930a6bcea91c7700eeff4a80d1d9ef7969b3ba0efe7c534c1b",
     "web/assets/favicon.svg": "666de6d1be09e0a01e687f5fb02fbd98b117b2ceddd4dfe4aa87438ad996244a",
     "web/assets/tailwind.css": "fc72c25e57b68f591b6d10f84f304ebae859786d5ca77f89870a8e64dffaef86",
     "web/assets/updates.js": "dc6500ad08567c362d6e1a747241acfaca2624af652ca8247b82bd56abd6844c",
-    "web/index.html": "45ec784539ab2bb0dfd9dd2d59e97a4a802e9740ab86bed37eb2d04b0b819389"
+    "web/index.html": "112515e8265db95d64a743423753980c06708e54213be4d4776d55d593b891d2"
   }
 }
