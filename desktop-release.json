@@ -1,8 +1,8 @@
 {
-  "version": "V0.16",
+  "version": "V0.17",
   "files": {
-    "README.md": "3058865644deba94ab768541c73657be8efd5e363a6ad53a73b85f998ac80d5e",
-    "monitor.py": "e7a088c64353e19bf9eeb26b44644f34570ab62a97f8d1b3abba34372ecd9ac1",
+    "README.md": "82281831e1b6ec7bc8e7e0dbee86a16c8e63a500c679984fdfadee4ba3ba24a8",
+    "monitor.py": "8b820d6c515f66bb6a5f082527f7d9ba7846831d988420c113b393c265e3b10a",
     "radar/__init__.py": "ea6353c993d07b97b38344dd41f079c3e2ebee5e9fbeb2aa1e1cfb3a06f6623c",
     "radar/ai_search.py": "722206c0e0b881dc1ff016a89eaa42bf5eb087bd3143a84fac2f4d466d87d8e9",
     "radar/csvio.py": "6d17a7823d81eb6e5017bf6a2a06d66ccc628ac50c7fc24f3106850f2db2d886",
@@ -23,10 +23,10 @@
     "web/assets/app.js": "779f3aedd7f0d8f851e1f9e6e742c5ebbc9bf5aabd6cf5990fa782d160663167",
     "web/assets/bootstrap.bundle.min.js": "cb789b7cec81aa580177e1b3c0561011539974d243d3a1de0d78a1a278015cab",
     "web/assets/bootstrap.min.css": "a31a97d0b41c95bbebb09b7c2329a4c672129f8369d96cb6ad8f638e84250c48",
-    "web/assets/custom.css": "c69401e67c1219a219c51c9b06198fd794d0905df9e8c88edfb958c7a3825cd9",
+    "web/assets/custom.css": "f4fe169c6e8fe7d21723c86f090bb6ffdb02ebcf6f39897d1c6b23f8dba3bed7",
     "web/assets/favicon.svg": "666de6d1be09e0a01e687f5fb02fbd98b117b2ceddd4dfe4aa87438ad996244a",
     "web/assets/tailwind.css": "fc72c25e57b68f591b6d10f84f304ebae859786d5ca77f89870a8e64dffaef86",
     "web/assets/updates.js": "dc6500ad08567c362d6e1a747241acfaca2624af652ca8247b82bd56abd6844c",
-    "web/index.html": "a90777b8923a34b5dad695a01dc1c5844b4844115d8eddeb4e5abac33f4b3859"
+    "web/index.html": "02df0607657ec1d2d010fddf979b4218c138c1d4892830331cba3dd7a847dfe2"
   }
 }
