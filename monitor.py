@@ -45,7 +45,7 @@ EXECUTIONS=ExecutionStore()
 START_LOCK=threading.Lock()
 SETTINGS_FORMAT='radar-de-vagas-settings'
 SETTINGS_SCHEMA_VERSION=1
-SETTINGS_APP_VERSION='V0.17'
+SETTINGS_APP_VERSION='V0.18'
 SETTINGS_EDITABLE={'max_age_days','min_score','notify_score','include_remote','include_local','strict_brazil_eligibility','blocked_companies','sources','local_cities','gupy_queries','remote_queries','greenhouse_boards','lever_boards','ashby_boards','smartrecruiters_boards','workable_boards','recruitee_boards','max_queries_per_source','query_combinations','ai_model','ai_daily_cap','ai_max_output_tokens','ai_web_search','ui_brand','ui_menu','ui_titles','exclude_seniority','exclude_custom_terms','resume_profile','resume_template','profile_name','profile_role','profile_skills','role_terms','junior_terms','local_state','scan_limit_per_source','notes','ai_enabled'}
 
 
@@ -280,7 +280,7 @@ def ai_worker(run_id):
         STATE['ai_running']=False
 
 class Handler(BaseHTTPRequestHandler):
-    server_version='RadarVagas/V0.17'
+    server_version='RadarVagas/V0.18'
     def log_message(self, fmt,*args):
         if sys.stderr is not None and not self.path.startswith(('/api/state','/api/executions')):super().log_message(fmt,*args)
     def respond(self,data,status=200):
@@ -404,7 +404,7 @@ class Handler(BaseHTTPRequestHandler):
         elif path=='/api/settings/export.json':
             b=(json.dumps(portable_settings(),ensure_ascii=False,indent=2)+'\n').encode('utf-8')
             self.send_response(200);self.send_header('Content-Type','application/json; charset=utf-8')
-            self.send_header('Content-Disposition','attachment; filename="Radar_configuracoes_V0.17.json"')
+            self.send_header('Content-Disposition','attachment; filename="Radar_configuracoes_V0.18.json"')
             self.send_header('Cache-Control','no-store')
             self.send_header('Content-Length',str(len(b)));self.end_headers();self.wfile.write(b)
         else:self.respond({'error':'Não encontrado'},404)
