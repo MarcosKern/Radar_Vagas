@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import shutil
+import struct
 import subprocess
 import tempfile
 import zipfile
@@ -36,7 +37,22 @@ def shortcut(work, exe):
     """
     subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],
                    env=env, check=True)
-    return link.read_bytes()
+    # WScript can save via a temporary file, leaving RelativePath based on
+    # that file. Keep the native shell target and set the distributed layout.
+    data = link.read_bytes()
+    flags = struct.unpack_from("<I", data, 20)[0]
+    offset = 76
+    if flags & 1:
+        offset += 2 + struct.unpack_from("<H", data, offset)[0]
+    if flags & 2:
+        offset += struct.unpack_from("<I", data, offset)[0]
+    if not flags & 0x80 or not flags & 8:
+        raise ValueError("O Windows não gerou um atalho Unicode com destino relativo.")
+    if flags & 4:
+        offset += 2 + 2 * struct.unpack_from("<H", data, offset)[0]
+    end = offset + 2 + 2 * struct.unpack_from("<H", data, offset)[0]
+    target = r".\Projeto\Radar de Vagas.exe".encode("utf-16le")
+    return data[:offset] + struct.pack("<H", len(target)//2) + target + data[end:]
 
 
 def build(dest, runtime, package=False):
