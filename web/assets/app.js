@@ -359,7 +359,7 @@ function openManage(id){
  $('manageTitle').textContent=j.title;$('manageSubtitle').textContent=j.company+' · '+j.source+' · '+(j.location||'local desconhecido');
  $('manageStatus').value=j.status;$('manageFollowup').value=(j.followup||'').slice(0,10);$('manageNotes').value=j.notes||'';$('manageContract').value=j.contract_type||'';$('manageRecruiter').value=j.recruiter||'';$('manageError').textContent='';
  $('manageReasons').textContent=(j.reasons||[]).join(' · ')||'Pontuação estimada a partir do perfil.';
- $('manageIgnore').textContent=j.ignored?'↻ Reativar vaga':'⊘ Bloquear vaga';const editable=['Manual','Importação XLSX','Importação CSV'].includes(j.source);
+ $('manageIgnore').textContent=j.ignored?'↻ Reativar vaga':'⊘ Bloquear vaga';const editable=['Manual','LinkedIn','Importação XLSX','Importação CSV'].includes(j.source);
  $('manageEdit').hidden=!editable;$('manageDelete').hidden=!editable;
  $('manageUrl').hidden=!j.url;$('manageUrl').href=j.url||'#';openDialog('manageDialog');
  loadManagedHistory(j.id);
@@ -390,9 +390,46 @@ async function setBlockForCard(id,blocked){
  try{await api('jobs/'+encodeURIComponent(id),'POST',{ignored:blocked});await refresh(true);status(blocked?'Vaga bloqueada. Consulte o menu Bloqueados.':'Vaga reativada.');}
  catch(e){status(e.message,true)}
 }
-function openManual(id=null){
+function linkedInSearchUrl(term,remote=false){
+ const url=new URL('https://www.linkedin.com/jobs/search/');
+ url.searchParams.set('keywords',term);
+ url.searchParams.set('location',remote?'Brasil':(db.settings?.local_state||'Brasil'));
+ const days=Math.min(30,Math.max(1,Number(db.settings?.max_age_days)||7));
+ url.searchParams.set('f_TPR','r'+String(days*86400));
+ if(remote)url.searchParams.set('f_WT','2');
+ return url.toString();
+}
+function linkedInSearches(){
+ const settings=db.settings||{},limit=Math.min(20,Math.max(1,Number(settings.max_queries_per_source)||10));
+ const unique=(values)=>[...new Map((Array.isArray(values)?values:[]).filter(Boolean).map(value=>[String(value).trim().toLocaleLowerCase(),String(value).trim()])).values()].slice(0,limit);
+ const fallback=(settings.role_terms||[]).length?settings.role_terms:[settings.profile_role].filter(Boolean);
+ const local=unique((settings.gupy_queries||[]).length?settings.gupy_queries:fallback);
+ const remote=unique((settings.remote_queries||[]).length?settings.remote_queries:fallback);
+ const searches=[];
+ if(settings.include_local!==false)for(const term of local)searches.push({term,remote:false,label:`Brasil · ${term}`});
+ if(settings.include_remote!==false)for(const term of remote)searches.push({term,remote:true,label:`Remoto · ${term}`});
+ return searches;
+}
+function renderLinkedInSearches(){
+ const searches=linkedInSearches(),list=$('linkedinSearchList');
+ $('linkedinSearchSummary').textContent=searches.length?`${searches.length} pesquisa(s) pronta(s)`:'Nenhum termo configurado';
+ list.innerHTML=searches.length?searches.map(search=>`<a class="linkedin-search-item" role="listitem" href="${escapeHTML(linkedInSearchUrl(search.term,search.remote))}" target="_blank" rel="noopener noreferrer"><span><strong>${escapeHTML(search.label)}</strong><small>${search.remote?'Modalidade remota':'Busca no Brasil'} · últimos ${Math.min(30,Math.max(1,Number(db.settings?.max_age_days)||7))} dias</small></span><b aria-hidden="true">Abrir ↗</b></a>`).join(''):'<div class="linkedin-search-empty">Cadastre cargos em <b>Configurações → Termos</b> para gerar pesquisas do LinkedIn.</div>';
+}
+function openLinkedInSearches(){
+ $('linkedinImportForm').reset();$('linkedinImportError').textContent='';renderLinkedInSearches();openDialog('linkedinDialog');
+}
+function submitLinkedInUrl(ev){
+ ev.preventDefault();const input=$('linkedinJobUrl'),error=$('linkedinImportError');error.textContent='';
+ try{
+  const url=new URL(input.value.trim()),host=url.hostname.toLocaleLowerCase();
+  if(url.protocol!=='https:'||!(host==='linkedin.com'||host.endsWith('.linkedin.com')))throw Error('Cole um link HTTPS válido do LinkedIn.');
+  closeDialog('linkedinDialog');openManual(null,{url:url.toString()});showToast('Link do LinkedIn preenchido. Complete cargo e empresa.','success');
+ }catch(e){error.textContent=e.message==='Invalid URL'?'Informe um link válido do LinkedIn.':e.message}
+}
+function openManual(id=null,prefill={}){
  editingId=id;$('manualForm').reset();$('manualError').textContent='';$('manualDialogTitle').textContent=id?'Editar vaga':'Cadastrar vaga';$('manualSubmit').textContent=id?'Salvar cadastro':'Cadastrar vaga';
  if(id){const j=db.jobs.find(x=>x.id===id);if(!j)return;for(const [key,elem] of Object.entries(MAN_FIELDS)){$(elem).value=key==='published'?(j[key]||'').slice(0,10):(j[key]??'')}}
+ else for(const [key,value] of Object.entries(prefill)){if(MAN_FIELDS[key]&&value!==undefined)$(MAN_FIELDS[key]).value=String(value)}
  openDialog('manualDialog');$('manTitle').focus();
 }
 async function submitManual(ev){ev.preventDefault();const btn=$('manualSubmit');btn.disabled=true;$('manualError').textContent='';const form={saved:true};for(const [key,elem] of Object.entries(MAN_FIELDS))form[key]=$(elem).value.trim();try{
@@ -649,6 +686,7 @@ function setup(){
  document.addEventListener('click',handleClick);document.addEventListener('keydown',e=>{const inp=e.target.closest('[data-tag-input]');if(inp&&e.key==='Enter'){e.preventDefault();addTag(inp.dataset.tagInput)}});
  $('menuBtn').addEventListener('click',openMenu);$('scrim').addEventListener('click',closeMenu);$('executionChoices').addEventListener('click',event=>{const target=event.target.closest('[data-execution-id]');if(target)showExecution(target.dataset.executionId)});
  $('scanBtn').addEventListener('click',startScan);$('manualBtn').addEventListener('click',()=>openManual());$('manualForm').addEventListener('submit',submitManual);
+ $('linkedinSearchBtn').addEventListener('click',openLinkedInSearches);$('linkedinImportForm').addEventListener('submit',submitLinkedInUrl);
  $('manageForm').addEventListener('submit',saveManage);$('manageIgnore').addEventListener('click',ignoreManaged);$('manageEdit').addEventListener('click',()=>{const id=managingId;closeDialog('manageDialog');openManual(id)});$('manageDelete').addEventListener('click',deleteManaged);
  $('importBtn').addEventListener('click',()=>{$('importForm').reset();$('importResult').textContent='';openDialog('importDialog')});$('importForm').addEventListener('submit',importWorkbook);
  $('openExportDialog').addEventListener('click',openExportFilters);
