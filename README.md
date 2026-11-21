@@ -1,4 +1,4 @@
-# Radar de Vagas — V0.15
+# Radar de Vagas — V0.16
 > **Instalação inicial:** este projeto não inclui `config.json`, bancos SQLite, vagas, candidaturas,
 > perfis profissionais, credenciais ou arquivos de exemplo. Na primeira execução, o sistema
 > usa apenas valores técnicos mínimos em memória, com todas as fontes desativadas.
