@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import shutil
+import struct
 import subprocess
 import tempfile
 import zipfile
@@ -22,7 +23,39 @@ def manifest():
     return {"version": VERSION, "files": {p.relative_to(ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(files) if p.is_file()}}
 
 
-def build(dest, runtime):
+def shortcut(work, exe):
+    """Create a native Shell Link while its target exists at the packaged layout."""
+    link = work / "Radar de Vagas.lnk"
+    env = {**os.environ, "RADAR_LINK": str(link), "RADAR_TARGET": str(exe)}
+    script = """
+        $ErrorActionPreference = 'Stop'
+        $shell = New-Object -ComObject WScript.Shell
+        $link = $shell.CreateShortcut($env:RADAR_LINK)
+        $link.TargetPath = $env:RADAR_TARGET
+        $link.Description = 'Abrir Radar de Vagas'
+        $link.Save()
+    """
+    subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],
+                   env=env, check=True)
+    # WScript can save via a temporary file, leaving RelativePath based on
+    # that file. Keep the native shell target and set the distributed layout.
+    data = link.read_bytes()
+    flags = struct.unpack_from("<I", data, 20)[0]
+    offset = 76
+    if flags & 1:
+        offset += 2 + struct.unpack_from("<H", data, offset)[0]
+    if flags & 2:
+        offset += struct.unpack_from("<I", data, offset)[0]
+    if not flags & 0x80 or not flags & 8:
+        raise ValueError("O Windows não gerou um atalho Unicode com destino relativo.")
+    if flags & 4:
+        offset += 2 + 2 * struct.unpack_from("<H", data, offset)[0]
+    end = offset + 2 + 2 * struct.unpack_from("<H", data, offset)[0]
+    target = r".\Projeto\Radar de Vagas.exe".encode("utf-16le")
+    return data[:offset] + struct.pack("<H", len(target)//2) + target + data[end:]
+
+
+def build(dest, runtime, package=False):
     info = manifest()
     if info != json.loads((ROOT / "desktop-release.json").read_text()):
         raise SystemExit("Atualize desktop-release.json com --manifest.")
@@ -34,18 +67,41 @@ def build(dest, runtime):
                 runtime.write_bytes(response.read())
         if hashlib.sha256(runtime.read_bytes()).hexdigest() != RUNTIME_SHA:
             raise SystemExit("Checksum do Python incompatível.")
-        with zipfile.ZipFile(work/"bundle.zip", "w", zipfile.ZIP_DEFLATED) as out, zipfile.ZipFile(runtime) as source:
-            for member in source.namelist():
-                out.writestr("python/" + member, source.read(member))
-            for name in [*info["files"], "desktop-release.json"]:
-                out.write(ROOT / name, "app/" + name)
-            out.write(ROOT / "desktop/start.py", "desktop/start.py")
-        shutil.copy(ROOT / "desktop/launcher_windows.go", work)
         dest = dest.resolve()
         dest.parent.mkdir(parents=True, exist_ok=True)
-        subprocess.run(["go","build","-trimpath","-ldflags",f"-s -w -H=windowsgui -X main.release={VERSION}",
-                        "-o",str(dest),"launcher_windows.go"], cwd=work,
+        # The legacy --exe mode embeds the runtime. The ZIP ships it next to
+        # the executable so the project and its dependencies are accessible.
+        with zipfile.ZipFile(work/"bundle.zip", "w", zipfile.ZIP_DEFLATED) as out, zipfile.ZipFile(runtime) as source:
+            if not package:
+                for member in source.namelist():
+                    out.writestr("python/" + member, source.read(member))
+                for name in [*info["files"], "desktop-release.json"]:
+                    out.write(ROOT / name, "app/" + name)
+                out.write(ROOT / "desktop/start.py", "desktop/start.py")
+        shutil.copy(ROOT / "desktop/launcher_windows.go", work)
+        exe = work / "Projeto" / "Radar de Vagas.exe" if package else dest
+        exe.parent.mkdir(exist_ok=True, parents=True)
+        flags = f"-s -w -H=windowsgui -X main.release={VERSION}"
+        if package:
+            flags += " -X main.layout=folder"
+        subprocess.run(["go","build","-trimpath","-ldflags",flags,
+                        "-o",str(exe),"launcher_windows.go"], cwd=work,
                        env={**os.environ,"GOOS":"windows","GOARCH":"amd64","CGO_ENABLED":"0"}, check=True)
+        if package:
+            with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as out, zipfile.ZipFile(runtime) as source:
+                out.writestr("Radar de Vagas.lnk", shortcut(work, exe))
+                out.write(exe, "Projeto/" + exe.name)
+                for member in source.namelist():
+                    out.writestr("Projeto/python/" + member, source.read(member))
+                files = [*info["files"], "desktop-release.json", "desktop/start.py",
+                         "desktop/build.py", "desktop/launcher_windows.go", "package.json",
+                         "web/build_tailwind.js", "agendar_buscas.ps1", "buscar_vagas.bat",
+                         "abrir_painel.bat", "data/.gitkeep"]
+                for name in files:
+                    out.write(ROOT / name, "Projeto/" + name)
+                for test in sorted((ROOT / "tests").glob("*.py")):
+                    out.write(test, "Projeto/tests/" + test.name)
+
 
 
 if __name__ == "__main__":
@@ -53,9 +109,10 @@ if __name__ == "__main__":
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--manifest", action="store_true")
     mode.add_argument("--exe", type=Path)
+    mode.add_argument("--package", type=Path)
     parser.add_argument("--runtime", type=Path)
     args = parser.parse_args()
     if args.manifest:
         (ROOT / "desktop-release.json").write_text(json.dumps(manifest(), indent=2) + "\n", "utf8")
     else:
-        build(args.exe, args.runtime)
+        build(args.exe or args.package, args.runtime, package=args.package is not None)
