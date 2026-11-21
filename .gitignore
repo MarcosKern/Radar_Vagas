@@ -1,0 +1,35 @@
+# Secrets and configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Node / JS
+node_modules/
+dist/
+build/
+.next/
+coverage/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Generated output, user data and resumes
+output/
+exports/
+local-data/
+private/
+*.log
+
+# Keep repository sample templates under templates/
